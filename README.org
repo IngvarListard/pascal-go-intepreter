@@ -1,0 +1,2 @@
+* Pascal go interpreter
+Pascal interpreter based on a series of articles by Ruslan Spivak Let’s [[https://ruslanspivak.com/lsbaws-part1/][Let’s Build A Simple Interpreter]]
