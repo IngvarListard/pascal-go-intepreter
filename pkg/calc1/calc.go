@@ -1,6 +1,7 @@
 package calc1
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"strconv"
@@ -10,8 +11,14 @@ import (
 const (
 	INTEGER tokenType = iota
 	PLUS
+	MINUS
 	EOF
 )
+
+var op = map[int]tokenType{
+	'+': PLUS,
+	'-': MINUS,
+}
 
 type tokenType int
 
@@ -55,6 +62,13 @@ type Interpreter struct {
 	currentToken *Token
 }
 
+func (i *Interpreter) peek() rune {
+	pos := i.pos + 1
+	if pos > len(i.text) {
+		return -1
+	}
+	return i.text[pos]
+}
 func (i *Interpreter) getNextToken() (*Token, error) {
 	text := i.text
 
@@ -64,19 +78,36 @@ func (i *Interpreter) getNextToken() (*Token, error) {
 
 	currentChar := i.text[i.pos]
 
-	if unicode.IsDigit(currentChar) {
-		v, err := strconv.Atoi(string(currentChar))
-		if err != nil {
-			return nil, err
-		}
+	for currentChar == ' ' {
 		i.pos++
+		currentChar = i.text[i.pos]
+	}
 
+	if unicode.IsDigit(currentChar) {
+		var buf bytes.Buffer
+		for unicode.IsDigit(currentChar) {
+			buf.WriteRune(currentChar)
+			i.pos++
+			if i.pos >= len(i.text) {
+				currentChar = -1
+				break
+			}
+			currentChar = i.text[i.pos]
+		}
+		v, err := strconv.Atoi(buf.String())
+		if err != nil {
+			return nil, fmt.Errorf("error got wrong val %v", buf.String())
+		}
 		return NewToken(INTEGER, v), nil
 	}
 
-	if currentChar == '+' {
+	switch currentChar {
+	case '+':
 		i.pos++
 		return NewToken(PLUS, '+'), nil
+	case '-':
+		i.pos++
+		return NewToken(MINUS, '-'), nil
 	}
 
 	return nil, errors.New("error parsing input")
@@ -106,8 +137,8 @@ func (i *Interpreter) Eval() (int, error) {
 		return 0, err
 	}
 
-	_ = i.currentToken
-	if err = i.eat(PLUS); err != nil {
+	sign := i.currentToken
+	if err = i.eat(op[sign.value]); err != nil {
 		return 0, err
 	}
 
@@ -116,5 +147,13 @@ func (i *Interpreter) Eval() (int, error) {
 		return 0, err
 	}
 
-	return left.value + right.value, nil
+	switch sign.typ {
+	case PLUS:
+		return left.value + right.value, nil
+	case MINUS:
+		return left.value - right.value, nil
+	default:
+		return 0, fmt.Errorf("unknown operator %v", sign.value)
+	}
+
 }
