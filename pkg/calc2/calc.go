@@ -126,7 +126,3 @@ func (c call) Check(vars map[Var]bool) error {
 	}
 	return err
 }
-
-func parseAndCheck(s string) (Expr, error) {
-
-}
