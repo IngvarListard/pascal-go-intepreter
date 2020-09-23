@@ -14,6 +14,8 @@ const (
 	Integer
 	Plus
 	Minus
+	Mul
+	Div
 )
 
 var op = map[int]tokenType{
@@ -26,6 +28,10 @@ type tokenType int
 type Token struct {
 	typ tokenType
 	val int
+}
+
+func (t *Token) Value() int {
+	return t.val
 }
 
 type Interpreter struct {
@@ -128,6 +134,10 @@ func (i *Interpreter) Eval() int {
 		i.consume(Plus)
 	case Minus:
 		i.consume(Minus)
+	case Mul:
+		i.consume(Mul)
+	case Div:
+		i.consume(Div)
 	default:
 		panic("unknown operator")
 	}
@@ -140,6 +150,10 @@ func (i *Interpreter) Eval() int {
 		return left.val + right.val
 	case Minus:
 		return left.val - right.val
+	case Mul:
+		return left.val * right.val
+	case Div:
+		return left.val / right.val
 	default:
 		panic("unknown operand")
 	}
