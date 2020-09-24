@@ -123,12 +123,11 @@ func (i *Interpreter) consume(tokenTyp tokenType) {
 
 func (i *Interpreter) Eval() int {
 	var result int
-	for {
-		i.currentToken = i.getNextToken()
-
-		left := i.currentToken
-		i.consume(Integer)
-
+	i.currentToken = i.getNextToken()
+	result = i.currentToken.val
+	i.consume(Integer)
+	i.skipWhitespaces()
+	for i.currentToken != nil && (i.currentToken.typ == Plus || i.currentToken.typ == Minus) {
 		op := i.currentToken
 
 		switch op.typ {
@@ -136,10 +135,6 @@ func (i *Interpreter) Eval() int {
 			i.consume(Plus)
 		case Minus:
 			i.consume(Minus)
-		case Mul:
-			i.consume(Mul)
-		case Div:
-			i.consume(Div)
 		default:
 			panic("unknown operator")
 		}
@@ -149,13 +144,9 @@ func (i *Interpreter) Eval() int {
 
 		switch op.typ {
 		case Plus:
-			return left.val + right.val
+			result = result + right.val
 		case Minus:
-			return left.val - right.val
-		case Mul:
-			return left.val * right.val
-		case Div:
-			return left.val / right.val
+			result = result - right.val
 		default:
 			panic("unknown operand")
 		}
