@@ -12,8 +12,8 @@ type Token int
 const (
 	EOF Token = iota
 	Integer
-	Plus
-	Minus
+	Mul
+	Div
 )
 
 type Interpreter struct {
@@ -45,18 +45,18 @@ func (i *Interpreter) getNextLexeme() (Lexeme, error) {
 		l := i.readInt()
 		i.skipWhitespace()
 		return l, nil
-	case v == '+':
+	case v == '*':
 		l := &term{
-			token: Plus,
-			value: '+',
+			token: Mul,
+			value: '*',
 		}
 		i.next()
 		i.skipWhitespace()
 		return l, nil
-	case v == '-':
+	case v == '/':
 		l := &term{
-			token: Minus,
-			value: '-',
+			token: Div,
+			value: '/',
 		}
 		i.next()
 		i.skipWhitespace()
@@ -79,7 +79,7 @@ func (i *Interpreter) Expr() (int, error) {
 
 	result := lv
 
-	for i.currentRune == '+' || i.currentRune == '-' {
+	for i.currentRune == '*' || i.currentRune == '/' {
 		op, err := i.getNextLexeme()
 		if err != nil {
 			return 0, err
@@ -96,10 +96,10 @@ func (i *Interpreter) Expr() (int, error) {
 		}
 
 		switch op.Type() {
-		case Plus:
-			result += rv
-		case Minus:
-			result -= rv
+		case Mul:
+			result *= rv
+		case Div:
+			result /= rv
 		}
 	}
 
