@@ -102,6 +102,10 @@ func (i *Interpreter) Expr() (int, error) {
 			result -= rv
 		}
 	}
+
+	if i.currentToken != EOF {
+		return 0, fmt.Errorf("unexpected symbol occrance, %v expected EOF", i.currentRune)
+	}
 	return result, nil
 }
 
