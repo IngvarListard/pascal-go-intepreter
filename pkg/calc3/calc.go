@@ -16,114 +16,160 @@ const (
 	Div
 )
 
-type Interpreter struct {
-	text         []rune
-	pos          int
-	currentRune  rune
-	currentToken Token
+type Parser struct {
+	text        []rune
+	pos         int
+	currentRune rune
 }
 
-func (i *Interpreter) next() {
-	i.pos++
-	if i.pos >= len(i.text) {
-		i.currentToken = EOF
-		i.currentRune = -1
+func (p *Parser) next() {
+	p.pos++
+	if p.pos >= len(p.text) {
+		p.currentRune = -1
 		return
 	}
-	i.currentRune = i.text[i.pos]
+	p.currentRune = p.text[p.pos]
 }
 
-func (i *Interpreter) skipWhitespace() {
-	for i.currentRune == ' ' || i.currentRune == '\n' || i.currentRune == '\t' {
-		i.next()
+func (p *Parser) skipWhitespace() {
+	for p.currentRune == ' ' || p.currentRune == '\n' || p.currentRune == '\t' {
+		p.next()
 	}
 }
 
-func (i *Interpreter) getNextLexeme() (Lexeme, error) {
-	switch v := i.currentRune; {
+func (p *Parser) getNextLexeme() (Lexeme, error) {
+	switch v := p.currentRune; {
 	case unicode.IsDigit(v):
-		l := i.readInt()
-		i.skipWhitespace()
+		l := p.readInt()
+		p.skipWhitespace()
 		return l, nil
 	case v == '*':
 		l := &term{
 			token: Mul,
 			value: '*',
 		}
-		i.next()
-		i.skipWhitespace()
+		p.next()
+		p.skipWhitespace()
 		return l, nil
 	case v == '/':
 		l := &term{
 			token: Div,
 			value: '/',
 		}
-		i.next()
-		i.skipWhitespace()
+		p.next()
+		p.skipWhitespace()
 		return l, nil
+	case v == -1:
+		return nil, nil
 	default:
-		return nil, fmt.Errorf("unexpected symbol occurance %v", i.currentRune)
+		return nil, fmt.Errorf("unexpected symbol occurance %v", p.currentRune)
 	}
 }
 
-func (i *Interpreter) Expr() (int, error) {
-	i.next()
-	l, err := i.getNextLexeme()
-	if err != nil {
-		return 0, err
-	}
-	lv, ok := l.Value().(int)
-	if !ok {
-		return 0, fmt.Errorf("left value should be integer, got %T instead", l.Value())
-	}
-
-	result := lv
-
-	for i.currentRune == '*' || i.currentRune == '/' {
-		op, err := i.getNextLexeme()
-		if err != nil {
-			return 0, err
-		}
-
-		r, err := i.getNextLexeme()
-		if err != nil {
-			return 0, err
-		}
-
-		rv, ok := r.Value().(int)
-		if !ok {
-			return 0, fmt.Errorf("right value should be integer, go %T instead", r.Value())
-		}
-
-		switch op.Type() {
-		case Mul:
-			result *= rv
-		case Div:
-			result /= rv
-		}
-	}
-
-	if i.currentToken != EOF {
-		return 0, fmt.Errorf("unexpected symbol occrance, %v expected EOF", i.currentRune)
-	}
-	return result, nil
-}
-
-func NewInterpreter(text string) *Interpreter {
-	return &Interpreter{
-		text: []rune(text),
-		pos:  -1,
-	}
-}
-
-func (i *Interpreter) readInt() Lexeme {
+func (p *Parser) readInt() Lexeme {
 	var numberBuf bytes.Buffer
-	for unicode.IsDigit(i.currentRune) {
-		numberBuf.WriteRune(i.currentRune)
-		i.next()
+	for unicode.IsDigit(p.currentRune) {
+		numberBuf.WriteRune(p.currentRune)
+		p.next()
 	}
 	number, _ := strconv.Atoi(numberBuf.String())
 	return &term{token: Integer, value: number}
+}
+
+type Interpreter struct {
+	*Parser
+	currentLexeme Lexeme
+}
+
+func (i *Interpreter) consume(token Token) error {
+	var err error
+	if token == i.currentLexeme.Type() {
+		i.currentLexeme, err = i.getNextLexeme()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (i *Interpreter) factor() (interface{}, error) {
+	l := i.currentLexeme
+	if err := i.consume(l.Type()); err != nil {
+		return nil, err
+	}
+	return l.Value(), nil
+}
+
+func (i *Interpreter) Expr() (int, error) {
+	v, err := i.factor()
+	if err != nil {
+		return 0, err
+	}
+
+	result, ok := v.(int)
+	if !ok {
+		return 0, fmt.Errorf("expected int type got %T instead", v)
+	}
+
+	for i.currentLexeme != nil && (i.currentLexeme.Type() == Mul || i.currentLexeme.Type() == Div) {
+		switch i.currentLexeme.Type() {
+		case Mul:
+			if err := i.consume(Mul); err != nil {
+				return 0, err
+			}
+			val, err := i.factor()
+			if err != nil {
+				return 0, err
+			}
+
+			v, ok := val.(int)
+			if !ok {
+				return 0, fmt.Errorf("expected in type got %T isntead", val)
+			}
+
+			result *= v
+		case Div:
+			if err := i.consume(Div); err != nil {
+				return 0, err
+			}
+			val, err := i.factor()
+			if err != nil {
+				return 0, err
+			}
+
+			v, ok := val.(int)
+			if !ok {
+				return 0, fmt.Errorf("expected in type got %T isntead", val)
+			}
+
+			result /= v
+		}
+	}
+
+	return result, nil
+}
+
+func NewParser(text string) (*Parser, error) {
+	if len(text) == 0 {
+		return nil, fmt.Errorf("empty input")
+	}
+	runes := []rune(text)
+	return &Parser{
+		text:        runes,
+		pos:         0,
+		currentRune: runes[0],
+	}, nil
+}
+
+func NewInterpreter(p *Parser) (*Interpreter, error) {
+	l, err := p.getNextLexeme()
+	if err != nil {
+		return nil, err
+	}
+	return &Interpreter{
+		Parser:        p,
+		currentLexeme: l,
+	}, nil
 }
 
 type Lexeme interface {

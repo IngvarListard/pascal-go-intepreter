@@ -21,7 +21,17 @@ func main() {
 			log.Fatal("end")
 		}
 
-		i := calc3.NewInterpreter(s)
+		p, err := calc3.NewParser(s)
+		if err != nil {
+			fmt.Println("error: ", err)
+			continue
+		}
+		i, err := calc3.NewInterpreter(p)
+		if err != nil {
+			fmt.Println("error: ", err)
+			continue
+		}
+
 		r, err := i.Expr()
 		if err != nil {
 			fmt.Println("Error: ", err)
