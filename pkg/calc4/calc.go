@@ -9,6 +9,16 @@ import (
 
 type Token int
 
+func (t Token) Priority() int {
+	switch t {
+	case Plus, Minus:
+		return 3
+	case Mul, Div:
+		return 2
+	}
+	return -1
+}
+
 const (
 	EOF Token = iota
 	Integer
@@ -16,6 +26,8 @@ const (
 	Minus
 	Mul
 	Div
+	Lparen
+	Rparen
 
 	Null rune = -1
 )
@@ -47,10 +59,70 @@ func (p *Parser) readInt() Lexeme {
 	return &Const{token: Integer, value: number}
 }
 
+type brackets struct {
+	lexeme Lexeme
+}
+
+func (b *brackets) Token() Token {
+	panic("implement me")
+}
+
+func (b *brackets) Value() (interface{}, error) {
+	panic("implement me")
+}
+
+//type binExpr struct {
+//	left Lexeme
+//	right Lexeme
+//	op Token
+//	token Token
+//}
+//
+//func (b *binExpr) Token() Token {
+//	return b.token
+//}
+//
+//func (b *binExpr) Value() (interface{}, error) {
+//	l, err := b.left.Value()
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	r, err := b.right.Value()
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	lInt, ok := l.(int)
+//	if !ok {
+//		return nil, fmt.Errorf("int expected got %T", l)
+//	}
+//
+//	rInt, ok := l.(int)
+//	if !ok {
+//		return nil, fmt.Errorf("int expected got %T", l)
+//	}
+//
+//	switch b.op {
+//	case Plus:
+//		return lInt + rInt, nil
+//	case Minus:
+//		return lInt - rInt, nil
+//	case Mul:
+//		return lInt * rInt, nil
+//	case Div:
+//		return lInt / rInt, nil
+//	default:
+//		return nil, fmt.Errorf("unexpected operator %v", b.op)
+//	}
+//}
+
 func (p *Parser) getNextLexeme() (Lexeme, error) {
 	switch r := p.currentRune; {
 	case unicode.IsDigit(r):
 		return p.readInt(), nil
+	case r == '(':
+		return &Const{token: Lparen, value: r}, nil
 	case r == '+':
 		p.next()
 		p.skipWhitespace()
@@ -151,18 +223,43 @@ func (i *Interpreter) Expr() (int, error) {
 }
 
 func (i *Interpreter) Factor() (int, error) {
-	v, ok := i.currentLexeme.Value().(int)
-	if !ok {
-		return 0, fmt.Errorf("factor: got unexpected type: expected int got %T", i.currentLexeme.Value())
+	lex := i.currentLexeme
+	switch lex.Token() {
+	case Lparen:
+		err := i.consume(Lparen)
+		if err != nil {
+			return 0, err
+		}
+		result, err := i.Expr()
+		if err != nil {
+			return 0, err
+		}
+
+		return result, nil
+	case Integer:
+		err := i.consume(Integer)
+		if err != nil {
+			return 0, err
+		}
+
+		r, err := lex.Value()
+		if err != nil {
+			return 0, err
+		}
+
+		result, ok := r.(int)
+		if !ok {
+			return 0, fmt.Errorf("expected int got %T", r)
+		}
+
+		return result, nil
 	}
-	var err error
-	i.currentLexeme, err = i.parser.getNextLexeme()
-	return v, err
+	return 0, fmt.Errorf("asdf")
 }
 
 type Lexeme interface {
 	Token() Token
-	Value() interface{}
+	Value() (interface{}, error)
 }
 
 type Const struct {
@@ -174,8 +271,8 @@ func (c *Const) Token() Token {
 	return c.token
 }
 
-func (c *Const) Value() interface{} {
-	return c.value
+func (c *Const) Value() (interface{}, error) {
+	return c.value, nil
 }
 
 func NewParser(text string) (*Parser, error) {

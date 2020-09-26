@@ -78,6 +78,19 @@ func TestInterpreter_Expr(t *testing.T) {
 			want:    6,
 			wantErr: false,
 		},
+		{
+			name: "simple_brackets",
+			fields: fields{
+				parser: &Parser{
+					text:        []rune(" 2 * (2 + 5) "),
+					pos:         0,
+					currentRune: ' ',
+				},
+				currentLexeme: nil,
+			},
+			want:    14,
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
