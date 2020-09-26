@@ -12,6 +12,8 @@ type Token int
 const (
 	EOF Token = iota
 	Integer
+	Plus
+	Minus
 	Mul
 	Div
 )
@@ -46,7 +48,7 @@ func (p *Parser) getNextLexeme() (Lexeme, error) {
 	case v == '*':
 		l := &term{
 			token: Mul,
-			value: '*',
+			value: v,
 		}
 		p.next()
 		p.skipWhitespace()
@@ -54,7 +56,23 @@ func (p *Parser) getNextLexeme() (Lexeme, error) {
 	case v == '/':
 		l := &term{
 			token: Div,
-			value: '/',
+			value: v,
+		}
+		p.next()
+		p.skipWhitespace()
+		return l, nil
+	case v == '+':
+		l := &term{
+			token: Plus,
+			value: v,
+		}
+		p.next()
+		p.skipWhitespace()
+		return l, nil
+	case v == '-':
+		l := &term{
+			token: Minus,
+			value: v,
 		}
 		p.next()
 		p.skipWhitespace()
@@ -146,6 +164,42 @@ func (i *Interpreter) Expr() (int, error) {
 		}
 	}
 
+	return result, nil
+}
+
+func (i *Interpreter) Term() (int, error) {
+	v, err := i.Expr()
+	if err != nil {
+		return 0, err
+	}
+
+	result := v
+
+	for i.currentLexeme != nil && (i.currentLexeme.Type() == Plus || i.currentLexeme.Type() == Minus) {
+
+		switch i.currentLexeme.Type() {
+		case Plus:
+			if err := i.consume(Plus); err != nil {
+				return 0, err
+			}
+			val, err := i.Expr()
+			if err != nil {
+				return 0, err
+			}
+
+			result += val
+		case Minus:
+			if err := i.consume(Minus); err != nil {
+				return 0, err
+			}
+			val, err := i.Expr()
+			if err != nil {
+				return 0, err
+			}
+
+			result -= val
+		}
+	}
 	return result, nil
 }
 

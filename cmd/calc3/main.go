@@ -32,7 +32,7 @@ func main() {
 			continue
 		}
 
-		r, err := i.Expr()
+		r, err := i.Term()
 		if err != nil {
 			fmt.Println("Error: ", err)
 		}
