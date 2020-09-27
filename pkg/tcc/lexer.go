@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"os"
+	"io"
 	"strconv"
 	"unicode"
 )
@@ -117,9 +117,9 @@ func (l *Lexer) nextToken() error {
 	return nil
 }
 
-func NewLexer() *Lexer {
+func NewLexer(r io.Reader) *Lexer {
 	return &Lexer{
 		currentRune: ' ',
-		reader:      bufio.NewReader(os.Stdin),
+		reader:      bufio.NewReader(r),
 	}
 }
