@@ -7,7 +7,7 @@ import (
 )
 
 func TestParser_Parse(t *testing.T) {
-	lexer := NewLexer(bytes.NewReader([]byte(" i = 3; ")))
+	lexer := NewLexer(bytes.NewReader([]byte(" {i = 3;} ")))
 	type fields struct {
 		lexer Lexer
 	}

@@ -116,13 +116,31 @@ func (b *brackets) Value() (interface{}, error) {
 //		return nil, fmt.Errorf("unexpected operator %v", b.op)
 //	}
 //}
+type bracket struct {
+	token  Token
+	lexeme Lexeme
+}
+
+func (b *bracket) Token() Token {
+	return b.token
+}
+
+func (b *bracket) Value() (interface{}, error) {
+	return b.lexeme.Value()
+}
 
 func (p *Parser) getNextLexeme() (Lexeme, error) {
 	switch r := p.currentRune; {
 	case unicode.IsDigit(r):
 		return p.readInt(), nil
 	case r == '(':
+		p.next()
+		p.skipWhitespace()
 		return &Const{token: Lparen, value: r}, nil
+	case r == ')':
+		p.next()
+		p.skipWhitespace()
+		return &Const{token: Rparen, value: r}, nil
 	case r == '+':
 		p.next()
 		p.skipWhitespace()
@@ -223,38 +241,33 @@ func (i *Interpreter) Expr() (int, error) {
 }
 
 func (i *Interpreter) Factor() (int, error) {
-	lex := i.currentLexeme
-	switch lex.Token() {
+
+	switch i.currentLexeme.Token() {
 	case Lparen:
 		err := i.consume(Lparen)
 		if err != nil {
 			return 0, err
 		}
-		result, err := i.Expr()
+		r, err := i.Term()
 		if err != nil {
 			return 0, err
 		}
-
-		return result, nil
+		return r, nil
 	case Integer:
-		err := i.consume(Integer)
+		v, err := i.currentLexeme.Value()
 		if err != nil {
 			return 0, err
 		}
-
-		r, err := lex.Value()
-		if err != nil {
-			return 0, err
-		}
-
-		result, ok := r.(int)
+		vv, ok := v.(int)
 		if !ok {
-			return 0, fmt.Errorf("expected int got %T", r)
+			return 0, fmt.Errorf("factor: got unexpected type: expected int got %T", v)
 		}
-
-		return result, nil
+		i.currentLexeme, err = i.parser.getNextLexeme()
+		return vv, err
+	default:
+		return 0, fmt.Errorf("unexpected token %v", i.currentLexeme.Token())
 	}
-	return 0, fmt.Errorf("asdf")
+
 }
 
 type Lexeme interface {
