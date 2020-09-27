@@ -62,7 +62,7 @@ func (l *Lexer) nextRune() (err error) {
 	return
 }
 
-func (l *Lexer) getNextToken() error {
+func (l *Lexer) nextToken() error {
 
 	have := func(r rune) bool { _, ok := Symbols[string(r)]; return ok }
 

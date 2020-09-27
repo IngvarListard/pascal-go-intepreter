@@ -24,7 +24,7 @@ func TestLexer_getNextToken(t *testing.T) {
 				reader:      bufio.NewReader(bytes.NewReader([]byte("a = 3"))),
 				currentRune: ' ',
 				value:       0,
-				tok:         0,
+				tok:         -1,
 			},
 			wantErr: false,
 		},
@@ -37,8 +37,8 @@ func TestLexer_getNextToken(t *testing.T) {
 				value:       tt.fields.value,
 				tok:         tt.fields.tok,
 			}
-			if err := l.getNextToken(); (err != nil) != tt.wantErr {
-				t.Errorf("getNextToken() error = %v, wantErr %v", err, tt.wantErr)
+			if err := l.nextToken(); (err != nil) != tt.wantErr {
+				t.Errorf("nextToken() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
