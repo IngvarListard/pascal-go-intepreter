@@ -104,6 +104,32 @@ func TestInterpreter_Expr(t *testing.T) {
 			want:    350,
 			wantErr: false,
 		},
+		{
+			name: "brackets_formula_3",
+			fields: fields{
+				parser: &Parser{
+					text:        []rune("(8 + 10) / 2"),
+					pos:         0,
+					currentRune: '(',
+				},
+				currentLexeme: nil,
+			},
+			want:    9,
+			wantErr: false,
+		},
+		//{
+		//	name: "brackets_formula_2",
+		//	fields: fields{
+		//		parser: &Parser{
+		//			text:        []rune("7 + 3 * (10 / (12 / (3 + 1) - 1))"),
+		//			pos:         0,
+		//			currentRune: '7',
+		//		},
+		//		currentLexeme: nil,
+		//	},
+		//	want:    22,
+		//	wantErr: false,
+		//},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -119,6 +145,9 @@ func TestInterpreter_Expr(t *testing.T) {
 				return
 			}
 			got, err := i.Term()
+			if i.parser.pos != -1 {
+				t.Errorf("IS NOT EOF")
+			}
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Expr() error = %v, wantErr %v", err, tt.wantErr)
 				return

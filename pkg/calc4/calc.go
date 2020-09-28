@@ -252,6 +252,10 @@ func (i *Interpreter) Factor() (int, error) {
 		if err != nil {
 			return 0, err
 		}
+		err = i.consume(Rparen)
+		if err != nil {
+			return 0, err
+		}
 		return r, nil
 	case Integer:
 		v, err := i.currentLexeme.Value()
