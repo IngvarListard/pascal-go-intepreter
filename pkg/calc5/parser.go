@@ -15,6 +15,7 @@ func (p *Parser) term() Node {
 		p.consume(p.currentToken.typ)
 		node = &BinOp{left: node, right: p.expr(), op: token}
 	}
+	return node
 }
 
 func (p *Parser) expr() Node {

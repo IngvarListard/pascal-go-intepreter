@@ -1,5 +1,9 @@
 package calc5
 
+import (
+	"fmt"
+)
+
 type TokenTyp int
 
 type Token struct {
@@ -21,7 +25,22 @@ type BinOp struct {
 func (b *BinOp) Token() *Token { return b.op }
 
 func (b *BinOp) Value() (interface{}, error) {
-	panic("not implemented")
+	lVal, _ := b.left.Value()
+	lInt := lVal.(int)
+	rVal, _ := b.right.Value()
+	rInt := rVal.(int)
+	switch b.op.typ {
+	case Mul:
+		return lInt * rInt, nil
+	case Div:
+		return lInt / rInt, nil
+	case Plus:
+		return lInt + rInt, nil
+	case Minus:
+		return lInt - rInt, nil
+	default:
+		return nil, fmt.Errorf("unexpected token type %v", b.op.typ)
+	}
 }
 
 type Num struct {
