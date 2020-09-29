@@ -15,10 +15,10 @@ type Node interface {
 type BinOp struct {
 	left  Node
 	right Node
-	token *Token
+	op    *Token
 }
 
-func (b *BinOp) Token() *Token { return b.token }
+func (b *BinOp) Token() *Token { return b.op }
 
 func (b *BinOp) Value() (interface{}, error) {
 	panic("not implemented")
