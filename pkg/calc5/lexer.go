@@ -45,19 +45,27 @@ func (l *Lexer) skipWhitespace() {
 func (l *Lexer) getNextToken() *Token {
 	for l.currentRune != NullRune {
 		switch r := l.currentRune; {
+		case unicode.IsSpace(r):
+			l.skipWhitespace()
 		case unicode.IsDigit(r):
 			return l.readInt()
 		case r == '+':
+			l.next()
 			return &Token{typ: Plus, value: r}
 		case r == '-':
+			l.next()
 			return &Token{typ: Minus, value: r}
 		case r == '*':
+			l.next()
 			return &Token{typ: Mul, value: r}
 		case r == '/':
+			l.next()
 			return &Token{typ: Div, value: r}
 		case r == '(':
+			l.next()
 			return &Token{typ: Lparen, value: r}
 		case r == ')':
+			l.next()
 			return &Token{typ: Rparen, value: r}
 		default:
 			panic(fmt.Sprintf("Unexpected character occurance: %s", string(r)))
