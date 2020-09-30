@@ -15,7 +15,7 @@ func TestInterpreter_interpret(t *testing.T) {
 		want   interface{}
 	}{
 		{
-			name: "test1",
+			name: "simple_sum",
 			fields: fields{
 				parser: &Parser{
 					lexer: &Lexer{
@@ -27,6 +27,34 @@ func TestInterpreter_interpret(t *testing.T) {
 				},
 			},
 			want: 5,
+		},
+		{
+			name: "complex_expr",
+			fields: fields{
+				parser: &Parser{
+					lexer: &Lexer{
+						text:        []rune("7 + 3 * (10 / (12 / (3 + 1) - 1)) / (2 + 3) - 5 - 3 + (8)"),
+						currentRune: '7',
+						pos:         0,
+					},
+					currentToken: nil,
+				},
+			},
+			want: 10,
+		},
+		{
+			name: "multi_bracket",
+			fields: fields{
+				parser: &Parser{
+					lexer: &Lexer{
+						text:        []rune("7 + (((3 + 2)))"),
+						currentRune: '7',
+						pos:         0,
+					},
+					currentToken: nil,
+				},
+			},
+			want: 12,
 		},
 	}
 	for _, tt := range tests {
