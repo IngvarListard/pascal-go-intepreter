@@ -23,6 +23,13 @@ func (i *Interpreter) interpretPolish() interface{} {
 	return i.VisitNodePolish(node)
 }
 
+func (i *Interpreter) interpretLisp() interface{} {
+	node := i.parser.parse()
+	//v, _ := node.Value()
+	//return v
+	return i.VisitNodeLisp(node)
+}
+
 func (i *Interpreter) visitBinOp(binary *BinOp) interface{} {
 	vl := i.VisitNode(binary.left)
 	val := vl.(int)
@@ -109,5 +116,50 @@ func (i *Interpreter) visitBinOpPolish(binary *BinOp) interface{} {
 		return fmt.Sprintf(template, leftStr, rightStr, "/")
 	default:
 		panic("AAA")
+	}
+}
+
+func (i *Interpreter) visitBinOpLisp(binary *BinOp) interface{} {
+	var leftStr string
+	var rightStr string
+
+	vl := i.VisitNodeLisp(binary.left)
+	switch vvv := vl.(type) {
+	case int:
+		leftStr = strconv.Itoa(vvv)
+	case string:
+		leftStr = vvv
+	}
+	vr := i.VisitNodeLisp(binary.right)
+	switch vvv := vr.(type) {
+	case int:
+		rightStr = strconv.Itoa(vvv)
+	case string:
+		rightStr = vvv
+	}
+	template := "(%s %s %s)"
+	switch binary.op.typ {
+	case Plus:
+
+		return fmt.Sprintf(template, "+", leftStr, rightStr)
+	case Minus:
+		return fmt.Sprintf(template, "-", leftStr, rightStr)
+	case Mul:
+		return fmt.Sprintf(template, "*", leftStr, rightStr)
+	case Div:
+		return fmt.Sprintf(template, "/", leftStr, rightStr)
+	default:
+		panic("AAA")
+	}
+}
+
+func (i *Interpreter) VisitNodeLisp(node Node) interface{} {
+	switch v := node.(type) {
+	case *BinOp:
+		return i.visitBinOpLisp(v)
+	case *Num:
+		return i.visitNum(v)
+	default:
+		panic(fmt.Sprintf("unexpected type occurrence %T", v))
 	}
 }
