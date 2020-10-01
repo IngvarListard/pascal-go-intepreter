@@ -8,35 +8,24 @@ type Interpreter struct {
 
 func (i *Interpreter) interpret() interface{} {
 	node := i.parser.parse()
-	v, _ := node.Value()
-	return v
+	//v, _ := node.Value()
+	//return v
+	return i.VisitNode(node)
 }
 
 func (i *Interpreter) visitBinOp(binary *BinOp) interface{} {
+	vl := i.VisitNode(binary.left)
+	val := vl.(int)
+	vr := i.VisitNode(binary.right)
+	vll := vr.(int)
 	switch binary.op.typ {
 	case Plus:
-		vl := i.VisitNode(binary.left)
-		val := vl.(int)
-		vr := i.VisitNode(binary.right)
-		vll := vr.(int)
 		return val + vll
 	case Minus:
-		vl := i.VisitNode(binary.left)
-		val := vl.(int)
-		vr := i.VisitNode(binary.right)
-		vll := vr.(int)
 		return val - vll
 	case Mul:
-		vl := i.VisitNode(binary.left)
-		val := vl.(int)
-		vr := i.VisitNode(binary.right)
-		vll := vr.(int)
 		return val * vll
 	case Div:
-		vl := i.VisitNode(binary.left)
-		val := vl.(int)
-		vr := i.VisitNode(binary.right)
-		vll := vr.(int)
 		return val / vll
 	default:
 		panic("AAA")
