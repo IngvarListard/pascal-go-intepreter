@@ -51,3 +51,14 @@ type Num struct {
 func (n *Num) Token() *Token { return n.token }
 
 func (n *Num) Value() (interface{}, error) { return n.value, nil }
+
+type UnaryOp struct {
+	expr Node
+	op   *Token
+}
+
+func (u *UnaryOp) Token() *Token { return u.Token() }
+
+func (u *UnaryOp) Value() (interface{}, error) {
+	return u.expr.Value()
+}
