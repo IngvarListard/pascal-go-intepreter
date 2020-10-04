@@ -48,9 +48,9 @@ func (p *Parser) factor() Node {
 	case Minus:
 		p.consume(Minus)
 		return &UnaryOp{expr: p.factor(), op: token}
+	default:
+		return p.variable()
 	}
-
-	return nil
 }
 
 func (p *Parser) consume(typ TokenTyp) {
@@ -62,5 +62,73 @@ func (p *Parser) consume(typ TokenTyp) {
 }
 
 func (p *Parser) parse() Node {
-	return p.expr()
+	node := p.program()
+	if p.currentToken.typ != EOF {
+		panic("not eof")
+	}
+	return node
+}
+
+func (p *Parser) program() Node {
+	node := p.compoundStatement()
+	p.consume(Dot)
+	return node
+}
+
+func (p *Parser) compoundStatement() Node {
+	p.consume(Begin)
+	nodes := p.statementList()
+	p.consume(End)
+
+	root := &Compound{children: make([]Node, len(nodes))}
+	for i, node := range nodes {
+		root.children[i] = node
+	}
+	return root
+}
+
+func (p *Parser) statementList() []Node {
+	node := p.statement()
+	results := []Node{node}
+	for p.currentToken.typ == Semi {
+		p.consume(Semi)
+		results = append(results, p.statement())
+	}
+
+	if p.currentToken.typ == Id {
+		panic("unexpected token Id")
+	}
+
+	return results
+}
+
+func (p *Parser) statement() Node {
+	switch p.currentToken.typ {
+	case Begin:
+		return p.compoundStatement()
+	case Id:
+		return p.assignmentStatement()
+	default:
+		return p.empty()
+	}
+}
+
+func (p *Parser) assignmentStatement() Node {
+	left := p.variable()
+	token := p.currentToken
+	p.consume(Assign)
+
+	right := p.expr()
+
+	return &assign{left: left, right: right, op: token}
+}
+
+func (p *Parser) variable() Node {
+	node := &Var{token: p.currentToken}
+	p.consume(Id)
+	return node
+}
+
+func (p *Parser) empty() Node {
+	return &NoOp{}
 }

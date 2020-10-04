@@ -62,3 +62,52 @@ func (u *UnaryOp) Token() *Token { return u.op }
 func (u *UnaryOp) Value() (interface{}, error) {
 	return u.expr.Value()
 }
+
+type Compound struct {
+	children []Node
+}
+
+func (c *Compound) Token() *Token {
+	panic("implement me")
+}
+
+func (c *Compound) Value() (interface{}, error) {
+	panic("implement me")
+}
+
+type assign struct {
+	left  Node
+	right Node
+	op    *Token
+}
+
+func (a *assign) Token() *Token {
+	panic("implement me")
+}
+
+func (a *assign) Value() (interface{}, error) {
+	panic("implement me")
+}
+
+type Var struct {
+	token *Token
+	value interface{}
+}
+
+func (v *Var) Token() *Token {
+	panic("implement me")
+}
+
+func (v *Var) Value() (interface{}, error) {
+	panic("implement me")
+}
+
+type NoOp struct{}
+
+func (n *NoOp) Token() *Token {
+	panic("implement me")
+}
+
+func (n *NoOp) Value() (interface{}, error) {
+	panic("implement me")
+}

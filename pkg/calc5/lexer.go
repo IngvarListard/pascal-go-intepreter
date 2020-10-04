@@ -15,10 +15,21 @@ const (
 	Div
 	Lparen // (
 	Rparen // )
+	Begin
+	End
+	Dot
+	Semi
+	Id
+	Assign
 	EOF
 
 	NullRune rune = 0
 )
+
+var ReservedKeywords = map[string]*Token{
+	"BEGIN": {typ: Begin, value: "BEGIN"},
+	"END":   {typ: End, value: "END"},
+}
 
 // Lexer or Tokenizer
 type Lexer struct {
@@ -67,6 +78,16 @@ func (l *Lexer) getNextToken() *Token {
 		case r == ')':
 			l.next()
 			return &Token{typ: Rparen, value: r}
+		case r == ':' && l.peek() == '=':
+			l.next()
+			l.next()
+			return &Token{typ: Assign, value: r}
+		case r == ';':
+			l.next()
+			return &Token{typ: Semi, value: r}
+		case r == '.':
+			l.next()
+			return &Token{typ: Dot, value: r}
 		default:
 			panic(fmt.Sprintf("Unexpected character occurance: %s", string(r)))
 		}
@@ -82,4 +103,27 @@ func (l *Lexer) readInt() *Token {
 	}
 	number, _ := strconv.Atoi(numberBuf.String())
 	return &Token{typ: Number, value: number}
+}
+
+func (l *Lexer) peek() rune {
+	pos := l.pos + 1
+	if pos > len(l.text)-1 {
+		return NullRune
+	}
+	return l.text[pos]
+}
+
+func (l *Lexer) id() *Token {
+	var result bytes.Buffer
+	for l.currentRune != NullRune && (unicode.IsDigit(l.currentRune) || unicode.IsLetter(l.currentRune)) {
+		result.WriteRune(l.currentRune)
+		result.WriteRune(l.currentRune)
+	}
+
+	id := result.String()
+	tok, ok := ReservedKeywords[id]
+	if !ok {
+		tok = &Token{typ: Id, value: id}
+	}
+	return tok
 }
