@@ -32,15 +32,24 @@ func (p *Parser) expr() Node {
 
 func (p *Parser) factor() Node {
 	token := p.currentToken
-	if token.typ == Number {
+
+	switch token.typ {
+	case Number:
 		p.consume(Number)
 		return &Num{token: token, value: token.value}
-	} else if token.typ == Lparen {
+	case Lparen:
 		p.consume(Lparen)
 		node := p.expr()
 		p.consume(Rparen)
 		return node
+	case Plus:
+		p.consume(Plus)
+		return &UnaryOp{expr: p.factor(), op: token}
+	case Minus:
+		p.consume(Minus)
+		return &UnaryOp{expr: p.factor(), op: token}
 	}
+
 	return nil
 }
 

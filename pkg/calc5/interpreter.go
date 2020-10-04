@@ -69,6 +69,8 @@ func (i *Interpreter) VisitNode(node Node) interface{} {
 		return i.visitBinOp(v)
 	case *Num:
 		return i.visitNum(v)
+	case *UnaryOp:
+		return i.VisitUnaryOp(v)
 	default:
 		panic(fmt.Sprintf("unexpected type occurrence %T", v))
 	}
@@ -161,5 +163,16 @@ func (i *Interpreter) VisitNodeLisp(node Node) interface{} {
 		return i.visitNum(v)
 	default:
 		panic(fmt.Sprintf("unexpected type occurrence %T", v))
+	}
+}
+
+func (i *Interpreter) VisitUnaryOp(node *UnaryOp) interface{} {
+	switch node.Token().typ {
+	case Plus:
+		return +i.VisitNode(node.expr).(int)
+	case Minus:
+		return -i.VisitNode(node.expr).(int)
+	default:
+		panic("Unexpected")
 	}
 }

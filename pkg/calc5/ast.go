@@ -57,7 +57,7 @@ type UnaryOp struct {
 	op   *Token
 }
 
-func (u *UnaryOp) Token() *Token { return u.Token() }
+func (u *UnaryOp) Token() *Token { return u.op }
 
 func (u *UnaryOp) Value() (interface{}, error) {
 	return u.expr.Value()

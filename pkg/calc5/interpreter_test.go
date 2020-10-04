@@ -56,6 +56,20 @@ func TestInterpreter_interpret(t *testing.T) {
 			},
 			want: 12,
 		},
+		{
+			name: "unary",
+			fields: fields{
+				parser: &Parser{
+					lexer: &Lexer{
+						text:        []rune("-7"),
+						currentRune: '-',
+						pos:         0,
+					},
+					currentToken: nil,
+				},
+			},
+			want: -7,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
