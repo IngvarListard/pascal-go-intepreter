@@ -56,6 +56,8 @@ func (l *Lexer) skipWhitespace() {
 func (l *Lexer) getNextToken() *Token {
 	for l.currentRune != NullRune {
 		switch r := l.currentRune; {
+		case unicode.IsLetter(r):
+			return l.id()
 		case unicode.IsSpace(r):
 			l.skipWhitespace()
 		case unicode.IsDigit(r):
@@ -117,7 +119,7 @@ func (l *Lexer) id() *Token {
 	var result bytes.Buffer
 	for l.currentRune != NullRune && (unicode.IsDigit(l.currentRune) || unicode.IsLetter(l.currentRune)) {
 		result.WriteRune(l.currentRune)
-		result.WriteRune(l.currentRune)
+		l.next()
 	}
 
 	id := result.String()

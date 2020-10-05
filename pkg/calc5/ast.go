@@ -95,11 +95,11 @@ type Var struct {
 }
 
 func (v *Var) Token() *Token {
-	panic("implement me")
+	return v.token
 }
 
 func (v *Var) Value() (interface{}, error) {
-	panic("implement me")
+	return v.value, nil
 }
 
 type NoOp struct{}

@@ -2,11 +2,11 @@ package calc5
 
 import (
 	"fmt"
-	"strconv"
 )
 
 type Interpreter struct {
-	parser *Parser
+	parser      *Parser
+	GlobalScope map[string]interface{}
 }
 
 func (i *Interpreter) interpret() interface{} {
@@ -14,20 +14,6 @@ func (i *Interpreter) interpret() interface{} {
 	//v, _ := node.Value()
 	//return v
 	return i.VisitNode(node)
-}
-
-func (i *Interpreter) interpretPolish() interface{} {
-	node := i.parser.parse()
-	//v, _ := node.Value()
-	//return v
-	return i.VisitNodePolish(node)
-}
-
-func (i *Interpreter) interpretLisp() interface{} {
-	node := i.parser.parse()
-	//v, _ := node.Value()
-	//return v
-	return i.VisitNodeLisp(node)
 }
 
 func (i *Interpreter) visitBinOp(binary *BinOp) interface{} {
@@ -49,16 +35,6 @@ func (i *Interpreter) visitBinOp(binary *BinOp) interface{} {
 	}
 }
 
-/*
-значит нужно написать так чтобы скобки опускались, а знак
-
-(2+3) * (4 + 5)
-2 3 + 4 * 5 +
-
-(2+3) * 7
-2 3 + 7 *
-*/
-
 func (i *Interpreter) visitNum(num *Num) interface{} {
 	return num.value
 }
@@ -71,99 +47,18 @@ func (i *Interpreter) VisitNode(node Node) interface{} {
 		return i.visitNum(v)
 	case *UnaryOp:
 		return i.VisitUnaryOp(v)
+	case *Compound:
+		i.VisitCompound(v)
+	case *assign:
+		i.VisitAssign(v)
+	case *NoOp:
+		i.VisitNoOp(v)
+	case *Var:
+		return i.VisitVar(v)
 	default:
 		panic(fmt.Sprintf("unexpected type occurrence %T", v))
 	}
-}
-
-func (i *Interpreter) VisitNodePolish(node Node) interface{} {
-	switch v := node.(type) {
-	case *BinOp:
-		return i.visitBinOpPolish(v)
-	case *Num:
-		return i.visitNum(v)
-	default:
-		panic(fmt.Sprintf("unexpected type occurrence %T", v))
-	}
-}
-
-func (i *Interpreter) visitBinOpPolish(binary *BinOp) interface{} {
-	var leftStr string
-	var rightStr string
-
-	vl := i.VisitNodePolish(binary.left)
-	switch vvv := vl.(type) {
-	case int:
-		leftStr = strconv.Itoa(vvv)
-	case string:
-		leftStr = vvv
-	}
-	vr := i.VisitNodePolish(binary.right)
-	switch vvv := vr.(type) {
-	case int:
-		rightStr = strconv.Itoa(vvv)
-	case string:
-		rightStr = vvv
-	}
-	template := "%s %s %s"
-	switch binary.op.typ {
-	case Plus:
-
-		return fmt.Sprintf(template, leftStr, rightStr, "+")
-	case Minus:
-		return fmt.Sprintf(template, leftStr, rightStr, "-")
-	case Mul:
-		return fmt.Sprintf(template, leftStr, rightStr, "*")
-	case Div:
-		return fmt.Sprintf(template, leftStr, rightStr, "/")
-	default:
-		panic("AAA")
-	}
-}
-
-func (i *Interpreter) visitBinOpLisp(binary *BinOp) interface{} {
-	var leftStr string
-	var rightStr string
-
-	vl := i.VisitNodeLisp(binary.left)
-	switch vvv := vl.(type) {
-	case int:
-		leftStr = strconv.Itoa(vvv)
-	case string:
-		leftStr = vvv
-	}
-	vr := i.VisitNodeLisp(binary.right)
-	switch vvv := vr.(type) {
-	case int:
-		rightStr = strconv.Itoa(vvv)
-	case string:
-		rightStr = vvv
-	}
-	template := "(%s %s %s)"
-	switch binary.op.typ {
-	case Plus:
-
-		return fmt.Sprintf(template, "+", leftStr, rightStr)
-	case Minus:
-		return fmt.Sprintf(template, "-", leftStr, rightStr)
-	case Mul:
-		return fmt.Sprintf(template, "*", leftStr, rightStr)
-	case Div:
-		return fmt.Sprintf(template, "/", leftStr, rightStr)
-	default:
-		panic("AAA")
-	}
-}
-
-func (i *Interpreter) VisitNodeLisp(node Node) interface{} {
-	switch v := node.(type) {
-	case *BinOp:
-		return i.visitBinOpLisp(v)
-	case *Num:
-		return i.visitNum(v)
-	default:
-		panic(fmt.Sprintf("unexpected type occurrence %T", v))
-	}
+	return nil
 }
 
 func (i *Interpreter) VisitUnaryOp(node *UnaryOp) interface{} {
@@ -176,3 +71,27 @@ func (i *Interpreter) VisitUnaryOp(node *UnaryOp) interface{} {
 		panic("Unexpected")
 	}
 }
+
+func (i *Interpreter) VisitCompound(node *Compound) {
+	for _, child := range node.children {
+		i.VisitNode(child)
+	}
+}
+
+func (i *Interpreter) VisitAssign(node *assign) {
+	nodeName := node.left.(*Var).token.value
+	n := nodeName.(string)
+	v := i.VisitNode(node.right)
+	i.GlobalScope[n] = v
+}
+
+func (i *Interpreter) VisitVar(node *Var) interface{} {
+	name := node.token.value
+	val, ok := i.GlobalScope[name.(string)]
+	if !ok {
+		panic(fmt.Sprintf("no %s name in global scope", name.(string)))
+	}
+	return val
+}
+
+func (i *Interpreter) VisitNoOp(_ *NoOp) {}
