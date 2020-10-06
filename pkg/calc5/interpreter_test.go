@@ -23,7 +23,7 @@ func TestInterpreter_interpret(t *testing.T) {
 						text: []rune(`
 BEGIN
     BEGIN
-        number := 2;
+        nUmbeR := 2;
         a := number;
         b := 10 * a + 10 * number / 4;
         c := a - - b

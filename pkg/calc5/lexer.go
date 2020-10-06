@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"strconv"
+	"strings"
 	"unicode"
 )
 
@@ -27,8 +28,8 @@ const (
 )
 
 var ReservedKeywords = map[string]*Token{
-	"BEGIN": {typ: Begin, value: "BEGIN"},
-	"END":   {typ: End, value: "END"},
+	"begin": {typ: Begin, value: "begin"},
+	"end":   {typ: End, value: "end"},
 }
 
 // Lexer or Tokenizer
@@ -122,7 +123,7 @@ func (l *Lexer) id() *Token {
 		l.next()
 	}
 
-	id := result.String()
+	id := strings.ToLower(result.String())
 	tok, ok := ReservedKeywords[id]
 	if !ok {
 		tok = &Token{typ: Id, value: id}
