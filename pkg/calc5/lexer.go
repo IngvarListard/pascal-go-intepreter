@@ -30,6 +30,7 @@ const (
 var ReservedKeywords = map[string]*Token{
 	"begin": {typ: Begin, value: "begin"},
 	"end":   {typ: End, value: "end"},
+	"div":   {typ: Div, value: "div"},
 }
 
 // Lexer or Tokenizer
@@ -57,7 +58,7 @@ func (l *Lexer) skipWhitespace() {
 func (l *Lexer) getNextToken() *Token {
 	for l.currentRune != NullRune {
 		switch r := l.currentRune; {
-		case unicode.IsLetter(r):
+		case unicode.IsLetter(r) || r == '_':
 			return l.id()
 		case unicode.IsSpace(r):
 			l.skipWhitespace()
@@ -72,9 +73,9 @@ func (l *Lexer) getNextToken() *Token {
 		case r == '*':
 			l.next()
 			return &Token{typ: Mul, value: r}
-		case r == '/':
-			l.next()
-			return &Token{typ: Div, value: r}
+		//case r == '/':
+		//	l.next()
+		//	return &Token{typ: Div, value: r}
 		case r == '(':
 			l.next()
 			return &Token{typ: Lparen, value: r}
@@ -118,7 +119,7 @@ func (l *Lexer) peek() rune {
 
 func (l *Lexer) id() *Token {
 	var result bytes.Buffer
-	for l.currentRune != NullRune && (unicode.IsDigit(l.currentRune) || unicode.IsLetter(l.currentRune)) {
+	for l.currentRune != NullRune && (unicode.IsDigit(l.currentRune) || unicode.IsLetter(l.currentRune)) || l.currentRune == '_' {
 		result.WriteRune(l.currentRune)
 		l.next()
 	}
