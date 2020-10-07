@@ -9,7 +9,17 @@ import (
 )
 
 const (
-	Number TokenTyp = iota
+	Program TokenTyp = iota
+	VarT
+	Colon // :
+	Comma // ,
+	Integer
+	Real
+	IntegerConst
+	RealConst
+	IntegerDiv // DIV
+	FloatDiv   // /
+	Number
 	Plus
 	Minus
 	Mul
@@ -28,9 +38,13 @@ const (
 )
 
 var ReservedKeywords = map[string]*Token{
-	"begin": {typ: Begin, value: "begin"},
-	"end":   {typ: End, value: "end"},
-	"div":   {typ: Div, value: "div"},
+	"program": {typ: Program, value: "program"},
+	"var":     {typ: VarT, value: "var"},
+	"integer": {typ: Integer, value: "integer"},
+	"real":    {typ: Begin, value: "real"},
+	"begin":   {typ: Begin, value: "begin"},
+	"end":     {typ: End, value: "end"},
+	"div":     {typ: IntegerDiv, value: "div"},
 }
 
 // Lexer or Tokenizer
@@ -55,6 +69,13 @@ func (l *Lexer) skipWhitespace() {
 	}
 }
 
+func (l *Lexer) skipComment() {
+	for l.currentRune != '}' {
+		l.next()
+	}
+	l.next()
+}
+
 func (l *Lexer) getNextToken() *Token {
 	for l.currentRune != NullRune {
 		switch r := l.currentRune; {
@@ -63,7 +84,7 @@ func (l *Lexer) getNextToken() *Token {
 		case unicode.IsSpace(r):
 			l.skipWhitespace()
 		case unicode.IsDigit(r):
-			return l.readInt()
+			return l.readNumber()
 		case r == '+':
 			l.next()
 			return &Token{typ: Plus, value: r}
@@ -99,12 +120,29 @@ func (l *Lexer) getNextToken() *Token {
 	return &Token{typ: EOF, value: NullRune}
 }
 
-func (l *Lexer) readInt() *Token {
+func (l *Lexer) readNumber() *Token {
 	var numberBuf bytes.Buffer
-	for unicode.IsDigit(l.currentRune) {
+	for unicode.IsDigit(l.currentRune) && l.currentRune != NullRune {
 		numberBuf.WriteRune(l.currentRune)
 		l.next()
 	}
+
+	if l.currentRune == '.' {
+		numberBuf.WriteRune(l.currentRune)
+		l.next()
+
+		for unicode.IsDigit(l.currentRune) && l.currentRune != NullRune {
+			numberBuf.WriteRune(l.currentRune)
+			l.next()
+		}
+
+		realNumber, err := strconv.ParseFloat(numberBuf.String(), 64)
+		if err != nil {
+			panic(fmt.Sprintf(`real number parsing from string "%s" error: %v`, numberBuf.String(), err))
+		}
+		return &Token{typ: RealConst, value: realNumber}
+	}
+
 	number, _ := strconv.Atoi(numberBuf.String())
 	return &Token{typ: Number, value: number}
 }
