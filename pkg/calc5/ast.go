@@ -111,3 +111,47 @@ func (n *NoOp) Token() *Token {
 func (n *NoOp) Value() (interface{}, error) {
 	panic("implement me")
 }
+
+type program struct {
+	name  string
+	block *block
+}
+
+func (p *program) Token() *Token {
+	panic("implement me")
+}
+
+func (p *program) Value() (interface{}, error) {
+	panic("implement me")
+}
+
+type block struct {
+	declarations      Node
+	compoundStatement *Compound
+}
+
+func (b *block) Token() *Token {
+	panic("implement me")
+}
+
+func (b *block) Value() (interface{}, error) {
+	panic("implement me")
+}
+
+type varDecl struct {
+	varNode  Node
+	typeNode Node
+}
+
+func (v *varDecl) Token() *Token {
+	panic("implement me")
+}
+
+func (v *varDecl) Value() (interface{}, error) {
+	panic("implement me")
+}
+
+type typeNode struct {
+	token *Token
+	value interface{}
+}
