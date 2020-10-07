@@ -132,3 +132,53 @@ func (p *Parser) variable() Node {
 func (p *Parser) empty() Node {
 	return &NoOp{}
 }
+
+func (p *Parser) block() Node {
+	declarationNodes := p.declarations()
+	compoundStatementNode := p.compoundStatement()
+	return &block{
+		declarations:      declarationNodes,
+		compoundStatement: compoundStatementNode.(*Compound),
+	}
+}
+
+func (p *Parser) declarations() []Node {
+	var decs []Node
+	if p.currentToken.typ == VarT {
+		p.consume(VarT)
+		for p.currentToken.typ == Id {
+			varDecl := p.variableDeclaration()
+			decs = append(decs, varDecl)
+			p.consume(Semi)
+		}
+	}
+	return decs
+}
+
+func (p *Parser) variableDeclaration() Node {
+	varNodes := []Node{&Var{
+		token: p.currentToken,
+		value: p.currentToken.value,
+	}}
+
+	for p.currentToken.typ == Comma {
+		p.consume(Comma)
+		varNodes = append(varNodes, &Var{
+			token: p.currentToken,
+			value: p.currentToken.value,
+		})
+		p.consume(Id)
+	}
+
+	p.consume(Comma)
+
+	typNode := p.typeSpec()
+
+	varDecls := make([]*varDecl, len())
+	for _, node := range varNodes {
+		varDecl{
+			varNode:  node,
+			typeNode: typNode,
+		}
+	}
+}

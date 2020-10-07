@@ -126,7 +126,7 @@ func (p *program) Value() (interface{}, error) {
 }
 
 type block struct {
-	declarations      Node
+	declarations      []Node
 	compoundStatement *Compound
 }
 
