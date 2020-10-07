@@ -79,6 +79,16 @@ func (l *Lexer) skipComment() {
 func (l *Lexer) getNextToken() *Token {
 	for l.currentRune != NullRune {
 		switch r := l.currentRune; {
+		case r == '{':
+			l.next()
+			l.skipComment()
+			continue
+		case r == ':':
+			l.next()
+			return &Token{typ: Colon, value: r}
+		case r == ',':
+			l.next()
+			return &Token{typ: Comma, value: r}
 		case unicode.IsLetter(r) || r == '_':
 			return l.id()
 		case unicode.IsSpace(r):
@@ -94,9 +104,9 @@ func (l *Lexer) getNextToken() *Token {
 		case r == '*':
 			l.next()
 			return &Token{typ: Mul, value: r}
-		//case r == '/':
-		//	l.next()
-		//	return &Token{typ: Div, value: r}
+		case r == '/':
+			l.next()
+			return &Token{typ: FloatDiv, value: r}
 		case r == '(':
 			l.next()
 			return &Token{typ: Lparen, value: r}
