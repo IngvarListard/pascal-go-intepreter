@@ -171,7 +171,6 @@ func (p *Parser) variableDeclaration() Node {
 	}
 
 	p.consume(Comma)
-
 	typNode := p.typeSpec()
 
 	varDecls := make([]*varDecl, len())
