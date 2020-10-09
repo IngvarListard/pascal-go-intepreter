@@ -169,7 +169,6 @@ func (p *Parser) variableDeclaration() Node {
 		})
 		p.consume(Id)
 	}
-
 	p.consume(Comma)
 	typNode := p.typeSpec()
 
