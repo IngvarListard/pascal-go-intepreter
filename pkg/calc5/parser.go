@@ -173,8 +173,8 @@ func (p *Parser) variableDeclaration() Node {
 	typNode := p.typeSpec()
 
 	varDecls := make([]*varDecl, len())
-	for _, node := range varNodes {
-		varDecl{
+	for i, node := range varNodes {
+		varDecls[i] = &varDecl{
 			varNode:  node,
 			typeNode: typNode,
 		}
