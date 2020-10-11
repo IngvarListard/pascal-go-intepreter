@@ -41,7 +41,7 @@ var ReservedKeywords = map[string]*Token{
 	"program": {typ: Program, value: "program"},
 	"var":     {typ: VarT, value: "var"},
 	"integer": {typ: Integer, value: "integer"},
-	"real":    {typ: Begin, value: "real"},
+	"real":    {typ: Real, value: "real"},
 	"begin":   {typ: Begin, value: "begin"},
 	"end":     {typ: End, value: "end"},
 	"div":     {typ: IntegerDiv, value: "div"},
@@ -83,6 +83,10 @@ func (l *Lexer) getNextToken() *Token {
 			l.next()
 			l.skipComment()
 			continue
+		case r == ':' && l.peek() == '=':
+			l.next()
+			l.next()
+			return &Token{typ: Assign, value: r}
 		case r == ':':
 			l.next()
 			return &Token{typ: Colon, value: r}
@@ -113,10 +117,6 @@ func (l *Lexer) getNextToken() *Token {
 		case r == ')':
 			l.next()
 			return &Token{typ: Rparen, value: r}
-		case r == ':' && l.peek() == '=':
-			l.next()
-			l.next()
-			return &Token{typ: Assign, value: r}
 		case r == ';':
 			l.next()
 			return &Token{typ: Semi, value: r}
@@ -154,7 +154,7 @@ func (l *Lexer) readNumber() *Token {
 	}
 
 	number, _ := strconv.Atoi(numberBuf.String())
-	return &Token{typ: Number, value: number}
+	return &Token{typ: IntegerConst, value: number}
 }
 
 func (l *Lexer) peek() rune {

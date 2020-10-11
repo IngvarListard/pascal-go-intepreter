@@ -155,3 +155,11 @@ type typeNode struct {
 	token *Token
 	value interface{}
 }
+
+func (t *typeNode) Token() *Token {
+	return t.token
+}
+
+func (t *typeNode) Value() (interface{}, error) {
+	return t.value, nil
+}

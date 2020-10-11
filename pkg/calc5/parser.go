@@ -10,9 +10,19 @@ type Parser struct {
 func (p *Parser) term() Node {
 	node := p.factor()
 
-	for p.currentToken.typ == Mul || p.currentToken.typ == Div {
+Loop:
+	for {
 		token := p.currentToken
-		p.consume(p.currentToken.typ)
+		switch t := p.currentToken.typ; t {
+		case Mul:
+			p.consume(t)
+		case IntegerDiv:
+			p.consume(t)
+		case FloatDiv:
+			p.consume(t)
+		default:
+			break Loop
+		}
 		node = &BinOp{left: node, right: p.factor(), op: token}
 	}
 	return node
@@ -34,8 +44,11 @@ func (p *Parser) factor() Node {
 	token := p.currentToken
 
 	switch token.typ {
-	case Number:
-		p.consume(Number)
+	case IntegerConst:
+		p.consume(IntegerConst)
+		return &Num{token: token, value: token.value}
+	case RealConst:
+		p.consume(RealConst)
 		return &Num{token: token, value: token.value}
 	case Lparen:
 		p.consume(Lparen)
@@ -70,9 +83,19 @@ func (p *Parser) parse() Node {
 }
 
 func (p *Parser) program() Node {
-	node := p.compoundStatement()
+	p.consume(Program)
+	varNode := p.variable()
+	progName := varNode.Token().value
+	p.consume(Semi)
+
+	blockNode := p.block()
+	programNode := &program{
+		name:  progName.(string),
+		block: blockNode.(*block),
+	}
 	p.consume(Dot)
-	return node
+
+	return programNode
 }
 
 func (p *Parser) compoundStatement() Node {
@@ -148,18 +171,19 @@ func (p *Parser) declarations() []Node {
 		p.consume(VarT)
 		for p.currentToken.typ == Id {
 			varDecl := p.variableDeclaration()
-			decs = append(decs, varDecl)
+			decs = append(decs, varDecl...)
 			p.consume(Semi)
 		}
 	}
 	return decs
 }
 
-func (p *Parser) variableDeclaration() Node {
+func (p *Parser) variableDeclaration() []Node {
 	varNodes := []Node{&Var{
 		token: p.currentToken,
 		value: p.currentToken.value,
 	}}
+	p.consume(Id)
 
 	for p.currentToken.typ == Comma {
 		p.consume(Comma)
@@ -169,14 +193,33 @@ func (p *Parser) variableDeclaration() Node {
 		})
 		p.consume(Id)
 	}
-	p.consume(Comma)
+	p.consume(Colon)
 	typNode := p.typeSpec()
 
-	varDecls := make([]*varDecl, len())
+	varDecls := make([]Node, len(varNodes))
 	for i, node := range varNodes {
 		varDecls[i] = &varDecl{
 			varNode:  node,
 			typeNode: typNode,
 		}
+	}
+	return varDecls
+}
+
+func (p *Parser) typeSpec() Node {
+	token := p.currentToken
+
+	switch typ := p.currentToken.typ; typ {
+	case Integer:
+		p.consume(typ)
+	case Real:
+		p.consume(typ)
+	default:
+		panic(fmt.Sprintf("unexpected token %v", typ))
+	}
+
+	return &typeNode{
+		token: token,
+		value: token.value,
 	}
 }
