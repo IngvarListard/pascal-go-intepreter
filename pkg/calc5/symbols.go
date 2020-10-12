@@ -1,10 +1,5 @@
 package calc5
 
-//type Symbol struct {
-//	name string
-//	typ interface{}
-//}
-
 type Symbol interface {
 	Name() string
 	Type() interface{}
