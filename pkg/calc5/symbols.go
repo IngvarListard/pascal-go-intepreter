@@ -1,18 +1,11 @@
 package calc5
 
+import "fmt"
+
 type Symbol interface {
 	Name() string
-	Type() interface{}
+	Type() Symbol
 }
-
-type symbol struct {
-	name string
-	typ  interface{}
-}
-
-func (s *symbol) Name() string { return s.name }
-
-func (s *symbol) Type() interface{} { return s.typ }
 
 type builtinTypeSymbol struct {
 	name string
@@ -20,6 +13,17 @@ type builtinTypeSymbol struct {
 
 func (b *builtinTypeSymbol) Name() string { return b.name }
 
-func (b *builtinTypeSymbol) Type() interface{} { return nil }
+func (b *builtinTypeSymbol) Type() Symbol { return nil }
 
-// может быть второй тип и интерфейс не нужны, пока не понятно
+func (b *builtinTypeSymbol) String() string { return b.name }
+
+type varSymbol struct {
+	name string
+	typ  Symbol
+}
+
+func (v *varSymbol) Name() string { return v.name }
+
+func (v *varSymbol) Type() Symbol { return v.typ }
+
+func (v *varSymbol) String() string { return fmt.Sprintf("<%v:%v>", v.name, v.typ) }
