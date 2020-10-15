@@ -8,10 +8,13 @@ import (
 type Interpreter struct {
 	parser      *Parser
 	GlobalScope map[string]interface{}
+	Symbols     *SymbolTableBuilder
 }
 
 func (i *Interpreter) interpret() interface{} {
 	node := i.parser.parse()
+	i.Symbols = &SymbolTableBuilder{NewSymbolTable()}
+	i.Symbols.VisitNode(node)
 	//v, _ := node.Value()
 	//return v
 	return i.VisitNode(node)
