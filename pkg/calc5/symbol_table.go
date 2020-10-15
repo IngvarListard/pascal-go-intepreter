@@ -35,7 +35,9 @@ func (s *SymbolTable) initBuiltins() {
 }
 
 func NewSymbolTable() *SymbolTable {
-	st := new(SymbolTable)
+	st := &SymbolTable{
+		symbols: make(map[string]Symbol),
+	}
 	st.initBuiltins()
 	return st
 }
