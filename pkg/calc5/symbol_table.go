@@ -93,8 +93,8 @@ func (sb *SymbolTableBuilder) VisitVarDecl(node *varDecl) {
 }
 
 func (sb *SymbolTableBuilder) visitAssign(node *assign) {
-	varName, _ := node.left.Value()
-	varSymbol := sb.lookup(varName.(string))
+	varName, _ := node.left.Token().value.(string)
+	varSymbol := sb.lookup(varName)
 	if varSymbol == nil {
 		panic("reference before assignment")
 	}
@@ -103,8 +103,8 @@ func (sb *SymbolTableBuilder) visitAssign(node *assign) {
 }
 
 func (sb SymbolTableBuilder) visitVar(node *Var) interface{} {
-	varName, _ := node.Value()
-	varSymbol := sb.lookup(varName.(string))
+	varName, _ := node.Token().value.(string)
+	varSymbol := sb.lookup(varName)
 
 	if varSymbol == nil {
 		panic("reference before assignment")
