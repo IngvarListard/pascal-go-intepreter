@@ -30,8 +30,8 @@ func (s *SymbolTable) lookup(name string) Symbol {
 }
 
 func (s *SymbolTable) initBuiltins() {
-	s.define(&builtinTypeSymbol{name: "INTEGER"})
-	s.define(&builtinTypeSymbol{name: "REAL"})
+	s.define(&builtinTypeSymbol{name: "integer"})
+	s.define(&builtinTypeSymbol{name: "real"})
 }
 
 func NewSymbolTable() *SymbolTable {

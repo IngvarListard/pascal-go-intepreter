@@ -21,17 +21,18 @@ func TestInterpreter_interpret(t *testing.T) {
 				parser: &Parser{
 					lexer: &Lexer{
 						text: []rune(`
-PROGRAM Part10AST;
+PROGRAM Part11;
 VAR
-   a, b : INTEGER;
-   y    : REAL;
+   number : INTEGER;
+   a, b   : INTEGER;
+   y      : REAL;
 
-BEGIN {Part10AST}
-   a := 2;
-   b := 10 * a + 10 * a DIV 4;
-   y := 20 / 7 + 3.14;
-END.  {Part10AST}
-`),
+BEGIN {Part11}
+   number := 2;
+   a := number ;
+   b := 10 * a + 10 * number DIV 4;
+   y := 20 / 7 + 3.14
+END.  {Part11}`),
 						currentRune: '\n',
 						pos:         0,
 					},
@@ -52,6 +53,7 @@ END.  {Part10AST}
 				t.Errorf("interpret() = %v, want %v", got, tt.want)
 			}
 			fmt.Println("GLOBAL SCOPE", i.GlobalScope)
+			fmt.Println("SYMBOLS", i.Symbols.symbols)
 		})
 	}
 }
