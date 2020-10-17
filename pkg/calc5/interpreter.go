@@ -108,6 +108,8 @@ func (i *Interpreter) VisitNode(node Node) interface{} {
 		i.VisitBlock(v)
 	case *varDecl:
 		i.VisitVarDecl(v)
+	case *procDecl:
+		i.VisitProcedureDec(v)
 	case *typeNode:
 		i.VisitType(v)
 	case *program:
@@ -167,3 +169,5 @@ func (i *Interpreter) VisitBlock(node *block) {
 func (i *Interpreter) VisitVarDecl(_ *varDecl) {}
 
 func (i *Interpreter) VisitType(_ *typeNode) {}
+
+func (i *Interpreter) VisitProcedureDec(_ *procDecl) {}

@@ -163,3 +163,14 @@ func (t *typeNode) Token() *Token {
 func (t *typeNode) Value() (interface{}, error) {
 	return t.value, nil
 }
+
+type procDecl struct {
+	procName string
+	block    *block
+}
+
+func (p *procDecl) Token() *Token { panic("implement me") }
+
+func (p *procDecl) Value() (interface{}, error) {
+	panic("implement me")
+}

@@ -32,19 +32,21 @@ const (
 	Semi
 	Id
 	Assign
+	Procedure
 	EOF
 
 	NullRune rune = 0
 )
 
 var ReservedKeywords = map[string]*Token{
-	"program": {typ: Program, value: "program"},
-	"var":     {typ: VarT, value: "var"},
-	"integer": {typ: Integer, value: "integer"},
-	"real":    {typ: Real, value: "real"},
-	"begin":   {typ: Begin, value: "begin"},
-	"end":     {typ: End, value: "end"},
-	"div":     {typ: IntegerDiv, value: "div"},
+	"program":   {typ: Program, value: "program"},
+	"var":       {typ: VarT, value: "var"},
+	"integer":   {typ: Integer, value: "integer"},
+	"real":      {typ: Real, value: "real"},
+	"begin":     {typ: Begin, value: "begin"},
+	"end":       {typ: End, value: "end"},
+	"div":       {typ: IntegerDiv, value: "div"},
+	"procedure": {typ: Procedure, value: "procedure"},
 }
 
 // Lexer or Tokenizer

@@ -132,9 +132,10 @@ func (sb *SymbolTableBuilder) VisitNode(node Node) interface{} {
 		sb.VisitBlock(v)
 	case *varDecl:
 		sb.VisitVarDecl(v)
+	case *procDecl:
+		sb.VisitProcedureDec(v)
 	case *typeNode:
-		//sb.VisitType(v)
-		return nil
+		sb.VisitType(v)
 	case *program:
 		return sb.visitProgram(v)
 	default:
@@ -142,3 +143,7 @@ func (sb *SymbolTableBuilder) VisitNode(node Node) interface{} {
 	}
 	return nil
 }
+
+func (sb *SymbolTableBuilder) VisitProcedureDec(_ *procDecl) {}
+
+func (sb *SymbolTableBuilder) VisitType(_ *typeNode) {}

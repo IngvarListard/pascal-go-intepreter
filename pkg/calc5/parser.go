@@ -175,6 +175,20 @@ func (p *Parser) declarations() []Node {
 			p.consume(Semi)
 		}
 	}
+
+	for p.currentToken.typ == Procedure {
+		p.consume(Procedure)
+		procName := p.currentToken.value
+		p.consume(Id)
+		p.consume(Semi)
+		blockNode := p.block()
+		procDecl := &procDecl{
+			procName: procName.(string),
+			block:    blockNode.(*block),
+		}
+		decs = append(decs, procDecl)
+		p.consume(Semi)
+	}
 	return decs
 }
 
