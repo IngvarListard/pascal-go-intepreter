@@ -153,9 +153,7 @@ func (i *Interpreter) VisitVar(node *Var) interface{} {
 	return val
 }
 
-func (i *Interpreter) VisitNoOp(_ *NoOp) {
-
-}
+func (i *Interpreter) VisitNoOp(_ *NoOp) {}
 
 func (i *Interpreter) VisitProgram(node *program) interface{} {
 	return i.VisitNode(node.block)
