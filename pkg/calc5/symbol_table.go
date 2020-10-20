@@ -85,10 +85,16 @@ func (sb *SemanticAnalyzer) VisitVarDecl(node *varDecl) {
 	typeName, _ := node.typeNode.Value()
 	typeSymbol := sb.lookup(typeName.(string))
 	varName, _ := node.varNode.Value()
+	varNameStr := varName.(string)
 	varSymbol := &varSymbol{
-		name: varName.(string),
+		name: varNameStr,
 		typ:  typeSymbol,
 	}
+
+	if sb.lookup(varNameStr) != nil {
+		panic(fmt.Sprintf("Error: Duplicate identifier '%s' found", varNameStr))
+	}
+
 	sb.define(varSymbol)
 }
 
@@ -144,6 +150,8 @@ func (sb *SemanticAnalyzer) VisitNode(node Node) interface{} {
 	return nil
 }
 
-func (sb *SemanticAnalyzer) VisitProcedureDec(_ *procDecl) {}
+func (sb *SemanticAnalyzer) VisitProcedureDec(node *procDecl) {
+	sb.VisitBlock(node.block)
+}
 
 func (sb *SemanticAnalyzer) VisitType(_ *typeNode) {}
