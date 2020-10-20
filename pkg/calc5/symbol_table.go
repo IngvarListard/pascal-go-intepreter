@@ -42,46 +42,46 @@ func NewSymbolTable() *SymbolTable {
 	return st
 }
 
-type SymbolTableBuilder struct {
+type SemanticAnalyzer struct {
 	*SymbolTable
 }
 
-func (sb *SymbolTableBuilder) VisitBlock(node *block) {
+func (sb *SemanticAnalyzer) VisitBlock(node *block) {
 	for _, declaration := range node.declarations {
 		sb.VisitNode(declaration)
 	}
 	sb.VisitNode(node.compoundStatement)
 }
 
-func (sb *SymbolTableBuilder) visitProgram(node *program) interface{} {
+func (sb *SemanticAnalyzer) visitProgram(node *program) interface{} {
 	sb.VisitBlock(node.block)
 
 	return nil
 }
 
-func (sb *SymbolTableBuilder) visitBinOp(node *BinOp) interface{} {
+func (sb *SemanticAnalyzer) visitBinOp(node *BinOp) interface{} {
 	sb.VisitNode(node.left)
 	sb.VisitNode(node.right)
 	return nil
 }
 
-func (sb *SymbolTableBuilder) visitNum(_ *Num) interface{} { return nil }
+func (sb *SemanticAnalyzer) visitNum(_ *Num) interface{} { return nil }
 
-func (sb *SymbolTableBuilder) VisitUnaryOp(node *UnaryOp) interface{} {
+func (sb *SemanticAnalyzer) VisitUnaryOp(node *UnaryOp) interface{} {
 	sb.VisitNode(node.expr)
 	return nil
 }
 
-func (sb *SymbolTableBuilder) VisitCompound(node *Compound) interface{} {
+func (sb *SemanticAnalyzer) VisitCompound(node *Compound) interface{} {
 	for _, child := range node.children {
 		sb.VisitNode(child)
 	}
 	return nil
 }
 
-func (sb *SymbolTableBuilder) VisitNoOp(_ *NoOp) {}
+func (sb *SemanticAnalyzer) VisitNoOp(_ *NoOp) {}
 
-func (sb *SymbolTableBuilder) VisitVarDecl(node *varDecl) {
+func (sb *SemanticAnalyzer) VisitVarDecl(node *varDecl) {
 	typeName, _ := node.typeNode.Value()
 	typeSymbol := sb.lookup(typeName.(string))
 	varName, _ := node.varNode.Value()
@@ -92,7 +92,7 @@ func (sb *SymbolTableBuilder) VisitVarDecl(node *varDecl) {
 	sb.define(varSymbol)
 }
 
-func (sb *SymbolTableBuilder) visitAssign(node *assign) {
+func (sb *SemanticAnalyzer) visitAssign(node *assign) {
 	varName, _ := node.left.Token().value.(string)
 	varSymbol := sb.lookup(varName)
 	if varSymbol == nil {
@@ -102,7 +102,7 @@ func (sb *SymbolTableBuilder) visitAssign(node *assign) {
 	sb.VisitNode(node.right)
 }
 
-func (sb SymbolTableBuilder) visitVar(node *Var) interface{} {
+func (sb SemanticAnalyzer) visitVar(node *Var) interface{} {
 	varName, _ := node.Token().value.(string)
 	varSymbol := sb.lookup(varName)
 
@@ -112,7 +112,7 @@ func (sb SymbolTableBuilder) visitVar(node *Var) interface{} {
 	return nil
 }
 
-func (sb *SymbolTableBuilder) VisitNode(node Node) interface{} {
+func (sb *SemanticAnalyzer) VisitNode(node Node) interface{} {
 	switch v := node.(type) {
 	case *BinOp:
 		return sb.visitBinOp(v)
@@ -144,6 +144,6 @@ func (sb *SymbolTableBuilder) VisitNode(node Node) interface{} {
 	return nil
 }
 
-func (sb *SymbolTableBuilder) VisitProcedureDec(_ *procDecl) {}
+func (sb *SemanticAnalyzer) VisitProcedureDec(_ *procDecl) {}
 
-func (sb *SymbolTableBuilder) VisitType(_ *typeNode) {}
+func (sb *SemanticAnalyzer) VisitType(_ *typeNode) {}
