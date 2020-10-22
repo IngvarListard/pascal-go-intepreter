@@ -1,6 +1,7 @@
 package calc5
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 )
@@ -12,13 +13,36 @@ type ScoopedSymbolTable struct {
 }
 
 func (s *ScoopedSymbolTable) String() string {
+	h1 := "SCOPE (SCOPED SYMBOL TABLE)"
+	var sep bytes.Buffer
+	for _ = range h1 {
+		sep.WriteRune('=')
+	}
+	lines := []string{"\n", h1, sep.String()}
+
+	for k, v := range map[string]interface{}{"Scope name": s.scopeName, "Scope level": s.scopeLevel} {
+		lines = append(lines, fmt.Sprintf("%s: %v", k, v))
+	}
+
+	h2 := "Scope (Scoped symbol table) contents"
+	sep = (bytes.Buffer)(nil)
+	for _ = range h2 {
+		sep.WriteRune('-')
+	}
+	lines = append(lines, h2, sep.String())
+
+	for k, v := range s.symbols {
+		lines = append(lines, fmt.Sprintf("%s: %s", k, v))
+	}
+	lines = append(lines, "\n")
+
 	values := make([]string, len(s.symbols))
 	cnt := 0
 	for _, symbol := range s.symbols {
 		values[cnt] = symbol.(fmt.Stringer).String()
 		cnt++
 	}
-	return fmt.Sprintf("Symbols: [%s]", strings.Join(values, ","))
+	return strings.Join(lines, "\n")
 }
 
 func (s *ScoopedSymbolTable) define(symbol Symbol) {
