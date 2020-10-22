@@ -5,11 +5,13 @@ import (
 	"strings"
 )
 
-type SymbolTable struct {
-	symbols map[string]Symbol
+type ScoopedSymbolTable struct {
+	symbols    map[string]Symbol
+	scopeName  string
+	scopeLevel int
 }
 
-func (s *SymbolTable) String() string {
+func (s *ScoopedSymbolTable) String() string {
 	values := make([]string, len(s.symbols))
 	cnt := 0
 	for _, symbol := range s.symbols {
@@ -19,23 +21,23 @@ func (s *SymbolTable) String() string {
 	return fmt.Sprintf("Symbols: [%s]", strings.Join(values, ","))
 }
 
-func (s *SymbolTable) define(symbol Symbol) {
+func (s *ScoopedSymbolTable) define(symbol Symbol) {
 	fmt.Printf("Define Symbol: %s\n", symbol)
 	s.symbols[symbol.Name()] = symbol
 }
 
-func (s *SymbolTable) lookup(name string) Symbol {
+func (s *ScoopedSymbolTable) lookup(name string) Symbol {
 	fmt.Printf("Lookup Symbol: %s\n", name)
 	return s.symbols[name]
 }
 
-func (s *SymbolTable) initBuiltins() {
+func (s *ScoopedSymbolTable) initBuiltins() {
 	s.define(&builtinTypeSymbol{name: "integer"})
 	s.define(&builtinTypeSymbol{name: "real"})
 }
 
-func NewSymbolTable() *SymbolTable {
-	st := &SymbolTable{
+func NewSymbolTable() *ScoopedSymbolTable {
+	st := &ScoopedSymbolTable{
 		symbols: make(map[string]Symbol),
 	}
 	st.initBuiltins()
@@ -43,7 +45,7 @@ func NewSymbolTable() *SymbolTable {
 }
 
 type SemanticAnalyzer struct {
-	*SymbolTable
+	*ScoopedSymbolTable
 }
 
 func (sb *SemanticAnalyzer) VisitBlock(node *block) {
