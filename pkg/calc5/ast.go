@@ -174,3 +174,22 @@ func (p *procDecl) Token() *Token { panic("implement me") }
 func (p *procDecl) Value() (interface{}, error) {
 	panic("implement me")
 }
+
+type param struct {
+	varNode  *Var
+	typeNode *typeNode
+}
+
+func (p *param) Token() *Token { panic("implement me") }
+
+func (p *param) Value() (interface{}, error) { panic("implement me") }
+
+type procedureDecl struct {
+	procName  string
+	params    []*param
+	blockNode *block
+}
+
+func (p *procedureDecl) Token() *Token { panic("implement me") }
+
+func (p *procedureDecl) Value() (interface{}, error) { panic("implement me") }

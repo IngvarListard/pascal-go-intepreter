@@ -13,7 +13,7 @@ type Interpreter struct {
 
 func (i *Interpreter) interpret() interface{} {
 	node := i.parser.parse()
-	i.Symbols = &SemanticAnalyzer{NewSymbolTable()}
+	i.Symbols = &SemanticAnalyzer{NewScopedSymbolTable()}
 	i.Symbols.VisitNode(node)
 	//v, _ := node.Value()
 	//return v

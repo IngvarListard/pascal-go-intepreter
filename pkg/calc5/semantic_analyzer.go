@@ -25,7 +25,7 @@ func (s *ScoopedSymbolTable) String() string {
 	}
 
 	h2 := "Scope (Scoped symbol table) contents"
-	sep = (bytes.Buffer)(nil)
+	sep = bytes.Buffer{}
 	for _ = range h2 {
 		sep.WriteRune('-')
 	}
@@ -60,9 +60,11 @@ func (s *ScoopedSymbolTable) initBuiltins() {
 	s.define(&builtinTypeSymbol{name: "real"})
 }
 
-func NewSymbolTable() *ScoopedSymbolTable {
+func NewScopedSymbolTable() *ScoopedSymbolTable {
 	st := &ScoopedSymbolTable{
-		symbols: make(map[string]Symbol),
+		symbols:    make(map[string]Symbol),
+		scopeName:  "global",
+		scopeLevel: 1,
 	}
 	st.initBuiltins()
 	return st
@@ -70,6 +72,12 @@ func NewSymbolTable() *ScoopedSymbolTable {
 
 type SemanticAnalyzer struct {
 	*ScoopedSymbolTable
+}
+
+func NewSemanticAnalyzer() *SemanticAnalyzer {
+	return &SemanticAnalyzer{
+		ScoopedSymbolTable: NewScopedSymbolTable(),
+	}
 }
 
 func (sb *SemanticAnalyzer) VisitBlock(node *block) {
