@@ -192,6 +192,12 @@ func (p *Parser) declarations() []Node {
 	return decs
 }
 
+func (p *Parser) formalParameterList() {}
+
+func (p *Parser) formalParameters() {
+	// paramNodes []*param
+}
+
 func (p *Parser) variableDeclaration() []Node {
 	varNodes := []Node{&Var{
 		token: p.currentToken,
