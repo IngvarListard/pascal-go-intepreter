@@ -167,35 +167,80 @@ func (p *Parser) block() Node {
 
 func (p *Parser) declarations() []Node {
 	var decs []Node
-	if p.currentToken.typ == VarT {
-		p.consume(VarT)
-		for p.currentToken.typ == Id {
-			varDecl := p.variableDeclaration()
-			decs = append(decs, varDecl...)
+	for {
+		if p.currentToken.typ == VarT {
+			p.consume(VarT)
+			for p.currentToken.typ == Id {
+				varDecl := p.variableDeclaration()
+				decs = append(decs, varDecl...)
+				p.consume(Semi)
+			}
+		} else if p.currentToken.typ == Procedure {
+			p.consume(Procedure)
+			procName := p.currentToken.value
+			p.consume(Id)
+
+			var params []*param
+
+			if p.currentToken.typ == Lparen {
+				p.consume(Lparen)
+				params = p.formalParameterList()
+
+				p.consume(Rparen)
+			}
+
 			p.consume(Semi)
+			blockNode := p.block()
+			procDecl := &procDecl{
+				procName: procName.(string),
+				params:   params,
+				block:    blockNode.(*block),
+			}
+			decs = append(decs, procDecl)
+			p.consume(Semi)
+		} else {
+			break
 		}
 	}
 
-	for p.currentToken.typ == Procedure {
-		p.consume(Procedure)
-		procName := p.currentToken.value
-		p.consume(Id)
-		p.consume(Semi)
-		blockNode := p.block()
-		procDecl := &procDecl{
-			procName: procName.(string),
-			block:    blockNode.(*block),
-		}
-		decs = append(decs, procDecl)
-		p.consume(Semi)
-	}
 	return decs
 }
 
-func (p *Parser) formalParameterList() {}
+func (p *Parser) formalParameters() []*param {
+	var paramNodes []*param
 
-func (p *Parser) formalParameters() {
-	// paramNodes []*param
+	paramTokens := []*Token{p.currentToken}
+	for p.currentToken.typ == Comma {
+		p.consume(Comma)
+		paramTokens = append(paramTokens, p.currentToken)
+		p.consume(Id)
+	}
+	p.consume(Colon)
+	typNode := p.typeSpec()
+
+	for _, token := range paramTokens {
+		paramNodes = append(paramNodes, &param{
+			varNode: &Var{
+				token: token,
+				value: token.value,
+			},
+			typeNode: typNode.(*typeNode),
+		})
+	}
+	return paramNodes
+}
+
+func (p *Parser) formalParameterList() []*param {
+	if p.currentToken.typ != Id {
+		return nil
+	}
+	paramNodes := p.formalParameters()
+
+	for p.currentToken.typ == Semi {
+		p.consume(Semi)
+		paramNodes = append(paramNodes, p.formalParameters()...)
+	}
+	return paramNodes
 }
 
 func (p *Parser) variableDeclaration() []Node {

@@ -166,6 +166,7 @@ func (t *typeNode) Value() (interface{}, error) {
 
 type procDecl struct {
 	procName string
+	params   []*param
 	block    *block
 }
 
