@@ -30,7 +30,7 @@ func (v *varSymbol) String() string { return fmt.Sprintf("<%v:%v>", v.name, v.ty
 
 type procedureSymbol struct {
 	name   string
-	params []*param
+	params []Symbol
 	typ    Symbol
 }
 

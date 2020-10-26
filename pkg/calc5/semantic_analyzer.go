@@ -60,24 +60,22 @@ func (s *ScoopedSymbolTable) initBuiltins() {
 	s.define(&builtinTypeSymbol{name: "real"})
 }
 
-func NewScopedSymbolTable() *ScoopedSymbolTable {
+func NewScopedSymbolTable(name string, level int) *ScoopedSymbolTable {
 	st := &ScoopedSymbolTable{
 		symbols:    make(map[string]Symbol),
-		scopeName:  "global",
-		scopeLevel: 1,
+		scopeName:  name,
+		scopeLevel: level,
 	}
 	st.initBuiltins()
 	return st
 }
 
 type SemanticAnalyzer struct {
-	*ScoopedSymbolTable
+	*ScoopedSymbolTable // currentScope?
 }
 
 func NewSemanticAnalyzer() *SemanticAnalyzer {
-	return &SemanticAnalyzer{
-		ScoopedSymbolTable: NewScopedSymbolTable(),
-	}
+	return new(SemanticAnalyzer)
 }
 
 func (sb *SemanticAnalyzer) VisitBlock(node *block) {
@@ -88,8 +86,12 @@ func (sb *SemanticAnalyzer) VisitBlock(node *block) {
 }
 
 func (sb *SemanticAnalyzer) visitProgram(node *program) interface{} {
-	sb.VisitBlock(node.block)
-
+	fmt.Println("Enter scope: Global")
+	globalScope := NewScopedSymbolTable("global", 1)
+	sb.ScoopedSymbolTable = globalScope
+	sb.VisitNode(node.block)
+	fmt.Println(globalScope)
+	fmt.Println("Leave scope: Global")
 	return nil
 }
 
@@ -142,7 +144,7 @@ func (sb *SemanticAnalyzer) visitAssign(node *assign) {
 	sb.VisitNode(node.right)
 }
 
-func (sb SemanticAnalyzer) visitVar(node *Var) interface{} {
+func (sb *SemanticAnalyzer) visitVar(node *Var) interface{} {
 	varName, _ := node.Token().value.(string)
 	varSymbol := sb.lookup(varName)
 
@@ -150,6 +152,19 @@ func (sb SemanticAnalyzer) visitVar(node *Var) interface{} {
 		panic("reference before assignment")
 	}
 	return nil
+}
+
+func (sb *SemanticAnalyzer) visitVarDecl(node *varDecl) {
+	typeName := node.typeNode.(*typeNode).value
+	typeSymbol := sb.lookup(typeName.(string))
+
+	varName, _ := node.varNode.Value()
+	varSymbol := varSymbol{
+		name: varName.(string),
+		typ:  typeSymbol,
+	}
+
+	sb.define(&varSymbol)
 }
 
 func (sb *SemanticAnalyzer) VisitNode(node Node) interface{} {
@@ -185,7 +200,30 @@ func (sb *SemanticAnalyzer) VisitNode(node Node) interface{} {
 }
 
 func (sb *SemanticAnalyzer) VisitProcedureDec(node *procDecl) {
-	sb.VisitBlock(node.block)
+	procName := node.procName
+	procSymbol := &procedureSymbol{
+		name: procName,
+	}
+	sb.define(procSymbol)
+	fmt.Printf("Entering scope: %s", procName)
+	procedureScope := NewScopedSymbolTable(procName, 2)
+	sb.ScoopedSymbolTable = procedureScope
+
+	for _, p := range node.params {
+		paramType := sb.lookup(p.typeNode.value.(string))
+		paramName := p.varNode.value
+
+		varSymbol := &varSymbol{
+			name: paramName.(string),
+			typ:  paramType,
+		}
+		sb.define(varSymbol)
+		procSymbol.params = append(procSymbol.params, varSymbol)
+	}
+	sb.VisitNode(node.block)
+
+	fmt.Println(procedureScope)
+	fmt.Printf("Leave scope: %s", procName)
 }
 
 func (sb *SemanticAnalyzer) VisitType(_ *typeNode) {}
