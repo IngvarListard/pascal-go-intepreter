@@ -21,30 +21,18 @@ func TestInterpreter_interpret(t *testing.T) {
 				parser: &Parser{
 					lexer: &Lexer{
 						text: []rune(`
-PROGRAM Part12;
-VAR
-   a : INTEGER;
+program Main;
+   var x, y: real;
 
-PROCEDURE P1;
-VAR
-   a : REAL;
-   k : INTEGER;
+   procedure Alpha(a : integer);
+      var y : integer;
+   begin
 
-   PROCEDURE P2;
-   VAR
-      a, z : INTEGER;
-   BEGIN {P2}
-      z := 777;
-   END;  {P2}
+   end;
 
-BEGIN {P1}
+begin { Main }
 
-END;  {P1}
-
-BEGIN {Part12}
-   a := 10;
-END.  {Part12}
-`),
+end.  { Main }`),
 						currentRune: '\n',
 						pos:         0,
 					},

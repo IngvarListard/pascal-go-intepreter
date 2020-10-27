@@ -6,13 +6,14 @@ import (
 	"strings"
 )
 
-type ScoopedSymbolTable struct {
-	symbols    map[string]Symbol
-	scopeName  string
-	scopeLevel int
+type ScopedSymbolTable struct {
+	symbols        map[string]Symbol
+	scopeName      string
+	scopeLevel     int
+	enclosingScope *ScopedSymbolTable
 }
 
-func (s *ScoopedSymbolTable) String() string {
+func (s *ScopedSymbolTable) String() string {
 	h1 := "SCOPE (SCOPED SYMBOL TABLE)"
 	var sep bytes.Buffer
 	for _ = range h1 {
@@ -20,7 +21,16 @@ func (s *ScoopedSymbolTable) String() string {
 	}
 	lines := []string{"\n", h1, sep.String()}
 
-	for k, v := range map[string]interface{}{"Scope name": s.scopeName, "Scope level": s.scopeLevel} {
+	scopeName := "nil"
+	if s.enclosingScope != nil {
+		scopeName = s.enclosingScope.scopeName
+	}
+
+	for k, v := range map[string]interface{}{
+		"Scope name":      s.scopeName,
+		"Scope level":     s.scopeLevel,
+		"Enclosing scope": scopeName,
+	} {
 		lines = append(lines, fmt.Sprintf("%s: %v", k, v))
 	}
 
@@ -45,33 +55,34 @@ func (s *ScoopedSymbolTable) String() string {
 	return strings.Join(lines, "\n")
 }
 
-func (s *ScoopedSymbolTable) define(symbol Symbol) {
+func (s *ScopedSymbolTable) define(symbol Symbol) {
 	fmt.Printf("Define Symbol: %s\n", symbol)
 	s.symbols[symbol.Name()] = symbol
 }
 
-func (s *ScoopedSymbolTable) lookup(name string) Symbol {
+func (s *ScopedSymbolTable) lookup(name string) Symbol {
 	fmt.Printf("Lookup Symbol: %s\n", name)
 	return s.symbols[name]
 }
 
-func (s *ScoopedSymbolTable) initBuiltins() {
+func (s *ScopedSymbolTable) initBuiltins() {
 	s.define(&builtinTypeSymbol{name: "integer"})
 	s.define(&builtinTypeSymbol{name: "real"})
 }
 
-func NewScopedSymbolTable(name string, level int) *ScoopedSymbolTable {
-	st := &ScoopedSymbolTable{
-		symbols:    make(map[string]Symbol),
-		scopeName:  name,
-		scopeLevel: level,
+func NewScopedSymbolTable(name string, level int, enclosingScope *ScopedSymbolTable) *ScopedSymbolTable {
+	st := &ScopedSymbolTable{
+		symbols:        make(map[string]Symbol),
+		scopeName:      name,
+		scopeLevel:     level,
+		enclosingScope: enclosingScope,
 	}
 	st.initBuiltins()
 	return st
 }
 
 type SemanticAnalyzer struct {
-	*ScoopedSymbolTable // currentScope?
+	*ScopedSymbolTable // currentScope?
 }
 
 func NewSemanticAnalyzer() *SemanticAnalyzer {
@@ -87,10 +98,12 @@ func (sb *SemanticAnalyzer) VisitBlock(node *block) {
 
 func (sb *SemanticAnalyzer) visitProgram(node *program) interface{} {
 	fmt.Println("Enter scope: Global")
-	globalScope := NewScopedSymbolTable("global", 1)
-	sb.ScoopedSymbolTable = globalScope
+	globalScope := NewScopedSymbolTable("global", 1, sb.ScopedSymbolTable)
+	sb.ScopedSymbolTable = globalScope
 	sb.VisitNode(node.block)
 	fmt.Println(globalScope)
+
+	sb.ScopedSymbolTable = sb.enclosingScope
 	fmt.Println("Leave scope: Global")
 	return nil
 }
@@ -206,8 +219,8 @@ func (sb *SemanticAnalyzer) VisitProcedureDec(node *procDecl) {
 	}
 	sb.define(procSymbol)
 	fmt.Printf("Entering scope: %s", procName)
-	procedureScope := NewScopedSymbolTable(procName, 2)
-	sb.ScoopedSymbolTable = procedureScope
+	procedureScope := NewScopedSymbolTable(procName, sb.scopeLevel+1, sb.ScopedSymbolTable)
+	sb.ScopedSymbolTable = procedureScope
 
 	for _, p := range node.params {
 		paramType := sb.lookup(p.typeNode.value.(string))
@@ -223,6 +236,8 @@ func (sb *SemanticAnalyzer) VisitProcedureDec(node *procDecl) {
 	sb.VisitNode(node.block)
 
 	fmt.Println(procedureScope)
+
+	sb.ScopedSymbolTable = procedureScope
 	fmt.Printf("Leave scope: %s", procName)
 }
 
