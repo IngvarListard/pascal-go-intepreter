@@ -210,6 +210,7 @@ func (p *Parser) formalParameters() []*param {
 	var paramNodes []*param
 
 	paramTokens := []*Token{p.currentToken}
+	p.consume(Id)
 	for p.currentToken.typ == Comma {
 		p.consume(Comma)
 		paramTokens = append(paramTokens, p.currentToken)
