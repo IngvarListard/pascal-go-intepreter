@@ -60,15 +60,20 @@ func (s *ScopedSymbolTable) define(symbol Symbol) {
 	s.symbols[symbol.Name()] = symbol
 }
 
-func (s *ScopedSymbolTable) lookup(name string) Symbol {
+func (s *ScopedSymbolTable) lookup(name string, currentScopeOnly bool) Symbol {
 	fmt.Printf("Lookup Symbol: %s in %s Scope\n", name, s.scopeName)
 
 	v, ok := s.symbols[name]
 	if ok {
 		return v
 	}
+
+	if currentScopeOnly {
+		return nil
+	}
+
 	if s.enclosingScope != nil {
-		return s.enclosingScope.lookup(name)
+		return s.enclosingScope.lookup(name, false)
 	}
 	return nil
 }
@@ -140,15 +145,12 @@ func (sb *SemanticAnalyzer) VisitNoOp(_ *NoOp) {}
 
 func (sb *SemanticAnalyzer) VisitVarDecl(node *varDecl) {
 	typeName, _ := node.typeNode.Value()
-	typeSymbol := sb.lookup(typeName.(string))
+	typeSymbol := sb.lookup(typeName.(string), false)
 	varName, _ := node.varNode.Value()
 	varNameStr := varName.(string)
-	varSymbol := &varSymbol{
-		name: varNameStr,
-		typ:  typeSymbol,
-	}
+	varSymbol := &varSymbol{name: varNameStr, typ: typeSymbol}
 
-	if sb.lookup(varNameStr) != nil {
+	if sb.lookup(varNameStr, true) != nil {
 		panic(fmt.Sprintf("Error: Duplicate identifier '%s' found", varNameStr))
 	}
 
@@ -157,7 +159,7 @@ func (sb *SemanticAnalyzer) VisitVarDecl(node *varDecl) {
 
 func (sb *SemanticAnalyzer) visitAssign(node *assign) {
 	varName, _ := node.left.Token().value.(string)
-	varSymbol := sb.lookup(varName)
+	varSymbol := sb.lookup(varName, false)
 	if varSymbol == nil {
 		panic("reference before assignment")
 	}
@@ -167,7 +169,7 @@ func (sb *SemanticAnalyzer) visitAssign(node *assign) {
 
 func (sb *SemanticAnalyzer) visitVar(node *Var) interface{} {
 	varName, _ := node.Token().value.(string)
-	varSymbol := sb.lookup(varName)
+	varSymbol := sb.lookup(varName, false)
 
 	if varSymbol == nil {
 		panic("reference before assignment")
@@ -177,12 +179,13 @@ func (sb *SemanticAnalyzer) visitVar(node *Var) interface{} {
 
 func (sb *SemanticAnalyzer) visitVarDecl(node *varDecl) {
 	typeName := node.typeNode.(*typeNode).value
-	typeSymbol := sb.lookup(typeName.(string))
+	typeSymbol := sb.lookup(typeName.(string), false)
 
 	varName, _ := node.varNode.Value()
-	varSymbol := varSymbol{
-		name: varName.(string),
-		typ:  typeSymbol,
+	varSymbol := varSymbol{name: varName.(string), typ: typeSymbol}
+
+	if sb.lookup(varName.(string), true) != nil {
+		panic(fmt.Sprintf("Error: Duplicate identifier '%s' found", varName))
 	}
 
 	sb.define(&varSymbol)
@@ -231,7 +234,7 @@ func (sb *SemanticAnalyzer) VisitProcedureDec(node *procDecl) {
 	sb.ScopedSymbolTable = procedureScope
 
 	for _, p := range node.params {
-		paramType := sb.lookup(p.typeNode.value.(string))
+		paramType := sb.lookup(p.typeNode.value.(string), false)
 		paramName := p.varNode.value
 
 		varSymbol := &varSymbol{
