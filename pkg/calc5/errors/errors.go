@@ -20,7 +20,7 @@ const (
 )
 
 type Error struct {
-	errorCode
+	*errorCode
 	Token     *calc5.Token
 	err       error
 	typ       errorType
@@ -32,8 +32,10 @@ func (e *Error) String() string {
 	var buf bytes.Buffer
 	buf.WriteString(string(e.typ))
 	buf.WriteString(": ")
-	buf.WriteString(string(e.errorCode))
-	buf.WriteString(": ")
+	if e.errorCode != nil {
+		buf.WriteString(string(*e.errorCode))
+		buf.WriteString(": ")
+	}
 	buf.WriteString(e.err.Error())
 
 	for _, scopeDesc := range e.callStack {
@@ -53,24 +55,40 @@ func (e *Error) Through(scopeDescription string) *Error {
 	return e
 }
 
-func NewError(errorCode errorCode, token *calc5.Token, typ errorType, err, scopeDescription string) *Error {
-	return &Error{
-		errorCode: errorCode,
-		Token:     token,
+func NewError(typ errorType, err, scopeDescription string, options ...Option) *Error {
+	e := &Error{
 		err:       errors.New(err),
 		typ:       typ,
 		callStack: []string{scopeDescription},
 	}
+	for _, option := range options {
+		option(e)
+	}
+	return e
 }
 
-func NewLexerError(errorCode errorCode, token *calc5.Token, err, scopeDescription string) *Error {
-	return NewError(errorCode, token, LexerError, err, scopeDescription)
+type Option func(*Error)
+
+func Token(token *calc5.Token) Option {
+	return func(e *Error) {
+		e.Token = token
+	}
 }
 
-func NewParserError(errorCode errorCode, token *calc5.Token, err, scopeDescription string) *Error {
-	return NewError(errorCode, token, ParserError, err, scopeDescription)
+func ErrorCode(ec *errorCode) Option {
+	return func(e *Error) {
+		e.errorCode = ec
+	}
 }
 
-func NewSemanticError(errorCode errorCode, token *calc5.Token, err, scopeDescription string) *Error {
-	return NewError(errorCode, token, SemanticError, err, scopeDescription)
+func NewLexerError(err, scopeDescription string, options ...Option) *Error {
+	return NewError(LexerError, err, scopeDescription, options...)
+}
+
+func NewParserError(err, scopeDescription string, options ...Option) *Error {
+	return NewError(ParserError, err, scopeDescription, options...)
+}
+
+func NewSemanticError(err, scopeDescription string, options ...Option) *Error {
+	return NewError(SemanticError, err, scopeDescription, options...)
 }

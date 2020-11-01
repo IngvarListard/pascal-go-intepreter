@@ -7,8 +7,14 @@ import (
 type TokenTyp int
 
 type Token struct {
-	typ   TokenTyp
-	value interface{}
+	typ    TokenTyp
+	value  interface{}
+	lineno int
+	column int
+}
+
+func (t *Token) String() string {
+	return fmt.Sprintf("Token{ %v, %v, position=%v: %v", t.typ, t.value, t.lineno, t.column)
 }
 
 type Node interface {
@@ -32,7 +38,9 @@ func (b *BinOp) Value() (interface{}, error) {
 	switch b.op.typ {
 	case Mul:
 		return lInt * rInt, nil
-	case Div:
+	case FloatDiv:
+		return float64(lInt) / float64(rInt), nil
+	case IntegerDiv:
 		return lInt / rInt, nil
 	case Plus:
 		return lInt + rInt, nil

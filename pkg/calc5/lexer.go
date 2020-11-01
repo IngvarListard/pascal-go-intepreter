@@ -3,51 +3,97 @@ package calc5
 import (
 	"bytes"
 	"fmt"
+	"github.com/IngvarListard/pascal-go-intepreter/pkg/calc5/errors"
 	"strconv"
 	"strings"
 	"unicode"
 )
 
 const (
-	Program TokenTyp = iota
-	VarT
-	Colon // :
-	Comma // ,
-	Integer
-	Real
-	IntegerConst
-	RealConst
-	IntegerDiv // DIV
-	FloatDiv   // /
-	Number
-	Plus
-	Minus
-	Mul
-	Div
-	Lparen // (
-	Rparen // )
-	Begin
-	End
-	Dot
-	Semi
-	Id
-	Assign
-	Procedure
-	EOF
+	// single character token types
+	Colon    TokenTyp = iota // ":"
+	Comma                    // ","
+	FloatDiv                 // "/"
+	Plus                     // "+"
+	Minus                    // "="
+	Mul                      // "*"
+	Lparen                   // "("
+	Rparen                   // ")"
+	Dot                      // "."
+	Semi                     // ";"
+	// reserved words
+	Begin      // "BEGIN"
+	Program    // "PROGRAM"
+	VarT       // "VAR"
+	Integer    // "INTEGER"
+	Real       // "REAL"
+	IntegerDiv // "DIV"
+	Procedure  // "PROCEDURE"
+	End        // "END"
+	// misc
+	Id           // "ID"
+	IntegerConst // "INTEGER_CONST"
+	RealConst    // "REAL_CONST"
+	Assign       // ":="
+	EOF          // "EOF"
 
 	NullRune rune = 0
 )
+
+var TokenTypes = [...]string{
+	// single character token types
+	Colon:    ":",
+	Comma:    ",",
+	FloatDiv: "/",
+	Plus:     "+",
+	Minus:    "=",
+	Mul:      "*",
+	Lparen:   "(",
+	Rparen:   ")",
+	Dot:      ".",
+	Semi:     ";",
+	// reserved words
+	Program:    "PROGRAM",
+	VarT:       "VAR",
+	Integer:    "INTEGER",
+	Real:       "REAL",
+	IntegerDiv: "DIV",
+	Procedure:  "PROCEDURE",
+	Begin:      "BEGIN",
+	End:        "END",
+	// misc
+	Id:           "ID",
+	IntegerConst: "INTEGER_CONST",
+	RealConst:    "REAL_CONST",
+	Assign:       ":=",
+	EOF:          "EOF",
+}
 
 var ReservedKeywords = map[string]*Token{
 	"program":   {typ: Program, value: "program"},
 	"var":       {typ: VarT, value: "var"},
 	"integer":   {typ: Integer, value: "integer"},
 	"real":      {typ: Real, value: "real"},
-	"begin":     {typ: Begin, value: "begin"},
-	"end":       {typ: End, value: "end"},
 	"div":       {typ: IntegerDiv, value: "div"},
 	"procedure": {typ: Procedure, value: "procedure"},
+	"begin":     {typ: Begin, value: "begin"},
+	"end":       {typ: End, value: "end"},
 }
+
+// TODO
+//var ReservedKeywords = buildReservedKeywords()
+//
+//func buildReservedKeywords() map[string]*Token {
+//	startIndex := Program
+//	endIndex := End
+//
+//	reservedKeywords := make(map[string]*Token, startIndex-endIndex)
+//	for i := startIndex; i <= endIndex; i++ {
+//		val := TokenTypes[i]
+//		reservedKeywords[strings.ToLower(val)] = &Token{typ: i, value: strings.ToLower(val)}
+//	}
+//	return reservedKeywords
+//}
 
 // Lexer or Tokenizer
 type Lexer struct {
@@ -134,7 +180,7 @@ func (l *Lexer) getNextToken() *Token {
 			l.next()
 			return &Token{typ: Dot, value: r}
 		default:
-			panic(fmt.Sprintf("Unexpected character occurance: %s", string(r)))
+			l.panic(fmt.Sprintf("Unexpected character occurance: %s", string(r)), "getNextToken")
 		}
 	}
 	return &Token{typ: EOF, value: NullRune}
@@ -158,7 +204,7 @@ func (l *Lexer) readNumber() *Token {
 
 		realNumber, err := strconv.ParseFloat(numberBuf.String(), 64)
 		if err != nil {
-			panic(fmt.Sprintf(`real number parsing from string "%s" error: %v`, numberBuf.String(), err))
+			l.panic(fmt.Sprintf(`real number parsing from string "%s" error: %v`, numberBuf.String(), err), "readNumber")
 		}
 		return &Token{typ: RealConst, value: realNumber}
 	}
@@ -188,4 +234,9 @@ func (l *Lexer) id() *Token {
 		tok = &Token{typ: Id, value: id}
 	}
 	return tok
+}
+
+func (l *Lexer) panic(err, context string) {
+	msg := fmt.Sprintf("Lexer error on %s: line: %v column: %v: %s", string(l.currentRune), l.lineno, l.column, err)
+	panic(errors.NewLexerError(msg, context).String())
 }
