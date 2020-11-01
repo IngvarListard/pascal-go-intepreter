@@ -61,8 +61,16 @@ func (s *ScopedSymbolTable) define(symbol Symbol) {
 }
 
 func (s *ScopedSymbolTable) lookup(name string) Symbol {
-	fmt.Printf("Lookup Symbol: %s\n", name)
-	return s.symbols[name]
+	fmt.Printf("Lookup Symbol: %s in %s Scope\n", name, s.scopeName)
+
+	v, ok := s.symbols[name]
+	if ok {
+		return v
+	}
+	if s.enclosingScope != nil {
+		return s.enclosingScope.lookup(name)
+	}
+	return nil
 }
 
 func (s *ScopedSymbolTable) initBuiltins() {

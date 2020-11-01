@@ -1,6 +1,8 @@
 package calc5
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type Parser struct {
 	lexer        *Lexer

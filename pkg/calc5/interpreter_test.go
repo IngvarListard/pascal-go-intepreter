@@ -27,12 +27,13 @@ program Main;
    procedure Alpha(a : integer);
       var y : integer;
    begin
-
+      x := a + x + y;
    end;
 
 begin { Main }
 
-end.  { Main }`),
+end.  { Main }
+`),
 						currentRune: '\n',
 						pos:         0,
 					},
