@@ -54,15 +54,23 @@ type Lexer struct {
 	text        []rune
 	currentRune rune
 	pos         int
+	lineno      int
+	column      int
 }
 
 func (l *Lexer) next() {
+	if l.currentRune == '\n' {
+		l.lineno++
+		l.column = 0
+	}
+
 	l.pos++
 	if l.pos >= len(l.text) {
 		l.currentRune = NullRune
 		return
 	}
 	l.currentRune = l.text[l.pos]
+	l.column++
 }
 
 func (l *Lexer) skipWhitespace() {
